@@ -198,7 +198,7 @@ public class LineServiceTest {
     }
 
     @Test
-    public void addLine__AlreadyExistsException() {
+    public void addLine__AlreadyExistsLineException() {
         LineDTO lineDTO = new LineDTO("test");
         String message = "이미 등록되어있는 노선입니다.";
         this.lineService.addLine(lineDTO);
@@ -217,7 +217,7 @@ package subway.domain.line;
 import java.util.List;
 
 public class LineService {
-    private static final String ALREADY_EXISTS_MESSAGE = "이미 등록되어있는 노선입니다.";
+    private static final String ALREADY_EXISTS_LINE_MESSAGE = "이미 등록되어있는 노선입니다.";
 
     public void addLine(LineDTO lineDTO) {
         Line line = new Line(lineDTO.getName());
@@ -317,7 +317,7 @@ public class LineServiceTest {
     }
 
     @Test
-    public void findOneByName__NotExistsException() {
+    public void findOneByName__NotExistsLineException() {
         String message = "존재하지 않은 노선입니다.";
         assertThatThrownBy(() -> this.lineService.findOneByName("test")).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
@@ -333,7 +333,7 @@ package subway.domain.line;
 import java.util.List;
 
 public class LineService {
-    private static final String NOT_EXISTS_MESSAGE = "존재하지 않은 노선입니다.";
+    private static final String NOT_EXISTS_LINE_MESSAGE = "존재하지 않은 노선입니다.";
 
     public Line findOneByName(String name) {
         return LineRepository.findByName(name).orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_MESSAGE));

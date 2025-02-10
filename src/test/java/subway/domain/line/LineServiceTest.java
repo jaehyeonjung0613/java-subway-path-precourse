@@ -17,7 +17,7 @@ public class LineServiceTest {
     }
 
     @Test
-    public void addLine__AlreadyExistsException() {
+    public void addLine__AlreadyExistsLineException() {
         LineDTO lineDTO = new LineDTO("test");
         String message = "이미 등록되어있는 노선입니다.";
         this.lineService.addLine(lineDTO);
@@ -37,7 +37,7 @@ public class LineServiceTest {
     }
 
     @Test
-    public void findOneByName__NotExistsException() {
+    public void findOneByName__NotExistsLineException() {
         String message = "존재하지 않은 노선입니다.";
         assertThatThrownBy(() -> this.lineService.findOneByName("test")).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
