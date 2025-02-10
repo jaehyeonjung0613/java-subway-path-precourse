@@ -2,6 +2,7 @@ package subway.domain.station;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 public class StationServiceTest {
@@ -13,7 +14,6 @@ public class StationServiceTest {
         assertThat(this.stationService.findAll()).hasSize(0);
         this.stationService.addStation(stationDTO);
         assertThat(this.stationService.findAll()).hasSize(1);
-        this.stationService.deleteAll();
     }
 
     @Test
@@ -23,7 +23,6 @@ public class StationServiceTest {
         this.stationService.addStation(stationDTO);
         assertThatThrownBy(() -> this.stationService.addStation(stationDTO)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
-        this.stationService.deleteAll();
     }
 
     @Test
@@ -33,7 +32,6 @@ public class StationServiceTest {
         this.stationService.addStation(stationDTO);
         Station station = this.stationService.findOneByName(name);
         assertThat(station.getName()).isEqualTo(name);
-        this.stationService.deleteAll();
     }
 
     @Test
@@ -41,5 +39,10 @@ public class StationServiceTest {
         String message = "존재하지 않은 역입니다.";
         assertThatThrownBy(() -> this.stationService.findOneByName("test")).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
+    }
+
+    @AfterEach
+    public void init() {
+        this.stationService.deleteAll();
     }
 }

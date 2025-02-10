@@ -439,6 +439,10 @@ public class StationRepositoryTest {
         assertThat(StationRepository.exists(station)).isEqualTo(false);
         StationRepository.addStation(station);
         assertThat(StationRepository.exists(station)).isEqualTo(true);
+    }
+
+    @AfterEach
+    public void init() {
         StationRepository.deleteAll();
     }
 }
@@ -482,7 +486,6 @@ public class StationServiceTest {
         assertThat(this.stationService.findAll()).hasSize(0);
         this.stationService.addStation(stationDTO);
         assertThat(this.stationService.findAll()).hasSize(1);
-        this.stationService.deleteAll();
     }
 
     @Test
@@ -492,6 +495,11 @@ public class StationServiceTest {
         this.stationService.addStation(stationDTO);
         assertThatThrownBy(() -> this.stationService.addStation(stationDTO)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
+        this.stationService.deleteAll();
+    }
+
+    @AfterEach
+    public void init() {
         this.stationService.deleteAll();
     }
 }
@@ -558,7 +566,6 @@ public class StationRepositoryTest {
         assertThat(StationRepository.findByName(name)).isNotPresent();
         StationRepository.addStation(station);
         assertThat(StationRepository.findByName(name)).isPresent();
-        StationRepository.deleteAll();
     }
 }
 ```
@@ -598,7 +605,6 @@ public class StationServiceTest {
         this.stationService.addStation(stationDTO);
         Station station = this.stationService.findOneByName(name);
         assertThat(station.getName()).isEqualTo(name);
-        this.stationService.deleteAll();
     }
 
     @Test
