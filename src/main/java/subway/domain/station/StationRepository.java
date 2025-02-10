@@ -1,4 +1,4 @@
-package subway.domain;
+package subway.domain.station;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,3 +24,4 @@ public class StationRepository {
         stations.clear();
     }
 }
+
