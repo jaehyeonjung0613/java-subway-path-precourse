@@ -2,6 +2,7 @@ package subway.domain.line;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 public class LineServiceTest {
@@ -13,7 +14,6 @@ public class LineServiceTest {
         assertThat(this.lineService.findAll()).hasSize(0);
         this.lineService.addLine(lineDTO);
         assertThat(this.lineService.findAll()).hasSize(1);
-        this.lineService.deleteAll();
     }
 
     @Test
@@ -23,7 +23,6 @@ public class LineServiceTest {
         this.lineService.addLine(lineDTO);
         assertThatThrownBy(() -> this.lineService.addLine(lineDTO)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
-        this.lineService.deleteAll();
     }
 
     @Test
@@ -33,7 +32,6 @@ public class LineServiceTest {
         this.lineService.addLine(lineDTO);
         Line line = this.lineService.findOneByName(name);
         assertThat(line.getName()).isEqualTo(name);
-        this.lineService.deleteAll();
     }
 
     @Test
@@ -41,5 +39,10 @@ public class LineServiceTest {
         String message = "존재하지 않은 노선입니다.";
         assertThatThrownBy(() -> this.lineService.findOneByName("test")).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
+    }
+
+    @AfterEach
+    public void init() {
+        this.lineService.deleteAll();
     }
 }

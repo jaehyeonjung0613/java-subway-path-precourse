@@ -2,6 +2,7 @@ package subway.domain.line;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 public class LineRepositoryTest {
@@ -11,7 +12,6 @@ public class LineRepositoryTest {
         assertThat(LineRepository.exists(line)).isEqualTo(false);
         LineRepository.addLine(line);
         assertThat(LineRepository.exists(line)).isEqualTo(true);
-        LineRepository.deleteAll();
     }
 
     @Test
@@ -21,6 +21,10 @@ public class LineRepositoryTest {
         assertThat(LineRepository.findByName(name)).isNotPresent();
         LineRepository.addLine(line);
         assertThat(LineRepository.findByName(name)).isPresent();
+    }
+
+    @AfterEach
+    public void init() {
         LineRepository.deleteAll();
     }
 }
