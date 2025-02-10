@@ -2,6 +2,7 @@ package subway.domain.section;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import subway.domain.line.Line;
@@ -17,6 +18,10 @@ public class SectionRepositoryTest {
         assertThat(SectionRepository.exists(section)).isEqualTo(false);
         SectionRepository.addSection(section);
         assertThat(SectionRepository.exists(section)).isEqualTo(true);
+    }
+
+    @AfterEach
+    public void init() {
         SectionRepository.deleteAll();
     }
 }

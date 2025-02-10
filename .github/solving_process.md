@@ -1017,6 +1017,10 @@ public class SectionRepositoryTest {
         assertThat(SectionRepository.exists(section)).isEqualTo(false);
         SectionRepository.addSection(section);
         assertThat(SectionRepository.exists(section)).isEqualTo(true);
+    }
+
+    @AfterEach
+    public void init() {
         SectionRepository.deleteAll();
     }
 }
