@@ -342,3 +342,284 @@ public class LineService {
 ```
 
 노선 이름 기준 단건 조회 기능 구현.
+
+## 2. Station CRUD
+
+```java
+// StationDTOTest.java
+
+package subway.domain.station;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class StationDTOTest {
+    @Test
+    public void new__StationNameEssentialException() {
+        String message = "역 이름은 필수입니다.";
+        assertThatThrownBy(() -> new StationDTO(null)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+        assertThatThrownBy(() -> new StationDTO("")).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+}
+```
+
+```java
+// StationDTO.java
+
+package subway.domain.station;
+
+public class StationDTO {
+    private static final String STATION_NAME_ESSENTIAL_MESSAGE = "역 이름은 필수입니다.";
+
+    private final String name;
+
+    public StationDTO(String name) {
+        this.validate(name);
+        this.name = name;
+    }
+
+    private void validate(String name) {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException(STATION_NAME_ESSENTIAL_MESSAGE);
+        }
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+```
+
+다양한 계층에서 쓰일 기본 StationDTO 구현.
+
+```java
+// StationService.java
+
+package subway.domain.station;
+
+import java.util.List;
+
+public class StationService {
+    public List<Station> findAll() {
+        return StationRepository.stations();
+    }
+    
+    public void deleteAll() {
+        StationRepository.deleteAll();
+    }
+}
+
+```
+
+기본 전체 조회 및 삭제 기능 생성.
+
+### 2-1. CREATE
+
+```java
+// StationRepositoryTest.java
+
+package subway.domain.station;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class StationRepositoryTest {
+    @Test
+    public void exists() {
+        Station station = new Station("test");
+        assertThat(StationRepository.exists(station)).isEqualTo(false);
+        StationRepository.addStation(station);
+        assertThat(StationRepository.exists(station)).isEqualTo(true);
+        StationRepository.deleteAll();
+    }
+}
+```
+
+```java
+// StationRepository.java
+
+package subway.domain.station;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+public class StationRepository {
+    public static boolean exists(Station other) {
+        return stations().stream().anyMatch(station -> station.getName().equals(other.getName()));
+    }
+}
+```
+
+역 중복 생성 방지를 위해 이름 기준으로 존재 여부 확인 기능 구현.
+
+```java
+// StationServiceTest.java
+
+package subway.domain.station;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class StationServiceTest {
+    private final StationService stationService = new StationService();
+
+    @Test
+    public void addStation() {
+        StationDTO stationDTO = new StationDTO("test");
+        assertThat(this.stationService.findAll()).hasSize(0);
+        this.stationService.addStation(stationDTO);
+        assertThat(this.stationService.findAll()).hasSize(1);
+        this.stationService.deleteAll();
+    }
+
+    @Test
+    public void addStation__AlreadyExistsStationException() {
+        StationDTO stationDTO = new StationDTO("test");
+        String message = "이미 등록되어있는 역입니다.";
+        this.stationService.addStation(stationDTO);
+        assertThatThrownBy(() -> this.stationService.addStation(stationDTO)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+        this.stationService.deleteAll();
+    }
+}
+```
+
+```java
+// StationService.java
+
+package subway.domain.station;
+
+import java.util.List;
+
+public class StationService {
+    private static final String ALREADY_EXISTS_STATION_MESSAGE = "이미 등록되어있는 역입니다.";
+    
+    public void addStation(StationDTO stationDTO) {
+        Station station = new Station(stationDTO.getName());
+        if (StationRepository.exists(station)) {
+            throw new IllegalArgumentException(ALREADY_EXISTS_STATION_MESSAGE);
+        }
+        StationRepository.addStation(station);
+    }
+}
+```
+
+역 추가 기능 구현.
+
+```java
+// StationController.java
+
+package subway.presentation;
+
+import subway.domain.station.StationDTO;
+import subway.domain.station.StationService;
+
+public class StationController {
+    private final StationService stationService = new StationService();
+
+    public void addStation(String name) {
+        StationDTO stationDTO = new StationDTO(name);
+        stationService.addStation(stationDTO);
+    }
+}
+```
+
+제어 계층에 역 추가 기능 매핑.
+
+### 2-2. READ
+
+```java
+// StationRepositoryTest.java
+
+package subway.domain.station;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class StationRepositoryTest {
+    @Test
+    public void findByName() {
+        String name = "test";
+        Station station = new Station(name);
+        assertThat(StationRepository.findByName(name)).isNotPresent();
+        StationRepository.addStation(station);
+        assertThat(StationRepository.findByName(name)).isPresent();
+        StationRepository.deleteAll();
+    }
+}
+```
+
+```java
+// StationRepository.java
+
+package subway.domain.station;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+public class StationRepository {
+    public static Optional<Station> findByName(String name) {
+        return stations.stream().filter(station -> station.getName().equals(name)).findFirst();
+    }
+}
+```
+
+```java
+// StationRepositoryTest.java
+
+package subway.domain.station;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class StationServiceTest {
+    @Test
+    public void findOneByName() {
+        String name = "test";
+        StationDTO stationDTO = new StationDTO(name);
+        this.stationService.addStation(stationDTO);
+        Station station = this.stationService.findOneByName(name);
+        assertThat(station.getName()).isEqualTo(name);
+        this.stationService.deleteAll();
+    }
+
+    @Test
+    public void findOneByName__NotExistsStationException() {
+        String message = "존재하지 않은 역입니다.";
+        assertThatThrownBy(() -> this.stationService.findOneByName("test")).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+}
+```
+
+```java
+// StationService.java
+
+package subway.domain.station;
+
+import java.util.List;
+
+public class StationService {
+    private static final String NOT_EXISTS_STATION_MESSAGE = "존재하지 않은 역입니다.";
+
+    public Station findOneByName(String name) {
+        return StationRepository.findByName(name)
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_STATION_MESSAGE));
+    }
+}
+```
+
+역 이름 기준 단건 조회 기능 구현.
