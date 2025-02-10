@@ -61,3 +61,284 @@ DDD 구조와 MVC 패턴을 적용하여 TDD 방식으로 개발하고, 입출�
 |    클래스     | 기능          |
 |:----------:|:------------|
 | Validation | - 공통 유효성 검증 |
+
+## 1. Line CRUD
+
+```java
+// LineDTOTest.java
+
+package subway.domain.line;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class LineDTOTest {
+    @Test
+    public void new__LineNameEssentialException() {
+        String message = "노선 이름은 필수입니다.";
+        assertThatThrownBy(() -> new LineDTO(null)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+        assertThatThrownBy(() -> new LineDTO("")).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+}
+```
+
+```java
+// LineDTO.java
+
+package subway.domain.line;
+
+public class LineDTO {
+    private static final String LINE_NAME_ESSENTIAL_MESSAGE = "노선 이름은 필수입니다.";
+
+    private final String name;
+
+    public LineDTO(String name) {
+        this.validate(name);
+        this.name = name;
+    }
+
+    private void validate(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException(LINE_NAME_ESSENTIAL_MESSAGE);
+        }
+    }
+
+    public String getName() {
+        return this.name;
+    }
+}
+```
+
+다양한 계층에서 쓰일 기본 LineDTO 구현.
+
+```java
+// LineService.java
+
+package subway.domain.line;
+
+import java.util.List;
+
+public class LineService {
+public List<Line> findAll() {
+return LineRepository.lines();
+}
+
+    public void deleteAll() {
+        LineRepository.deleteAll();
+    }
+}
+```
+
+기본 전체 조회 및 삭제 기능 생성.
+
+### 1-1. CREATE
+
+```java
+// LineRepositoryTest.java
+
+package subway.domain.line;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class LineRepositoryTest {
+    @Test
+    public void exists() {
+        Line line = new Line("test");
+        assertThat(LineRepository.exists(line)).isEqualTo(false);
+        LineRepository.addLine(line);
+        assertThat(LineRepository.exists(line)).isEqualTo(true);
+        LineRepository.deleteAll();
+    }
+}
+```
+
+```java
+// LineRepository.java
+
+package subway.domain.line;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+public class LineRepository {
+    public static boolean exists(Line other) {
+        return lines.stream().anyMatch(line -> line.getName().equals(other.getName()));
+    }
+}
+```
+
+노선 중복 생성 방지를 위해 이름 기준으로 존재 여부 확인 기능 구현.
+
+```java
+// LineServiceTest.java
+
+package subway.domain.line;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class LineServiceTest {
+    private final LineService lineService = new LineService();
+
+    @Test
+    public void addLine() {
+        LineDTO lineDTO = new LineDTO("test");
+        assertThat(lineService.findAll()).hasSize(0);
+        this.lineService.addLine(lineDTO);
+        assertThat(lineService.findAll()).hasSize(1);
+        this.lineService.deleteAll();
+    }
+
+    @Test
+    public void addLine__AlreadyExistsException() {
+        LineDTO lineDTO = new LineDTO("test");
+        String message = "이미 등록되어있는 노선입니다.";
+        this.lineService.addLine(lineDTO);
+        assertThatThrownBy(() -> this.lineService.addLine(lineDTO)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+        this.lineService.deleteAll();
+    }
+}
+```
+
+```java
+// LineService.java
+
+package subway.domain.line;
+
+import java.util.List;
+
+public class LineService {
+    private static final String ALREADY_EXISTS_MESSAGE = "이미 등록되어있는 노선입니다.";
+
+    public void addLine(LineDTO lineDTO) {
+        Line line = new Line(lineDTO.getName());
+        if (LineRepository.exists(line)) {
+            throw new IllegalArgumentException(ALREADY_EXISTS_MESSAGE);
+        }
+        LineRepository.addLine(line);
+    }
+}
+```
+
+노선 추가 기능 구현.
+
+```java
+// LineController.java
+
+package subway.presentation;
+
+import subway.domain.line.LineDTO;
+import subway.domain.line.LineService;
+
+public class LineController {
+    private final LineService lineService = new LineService();
+
+    public void addLine(String lineName) {
+        LineDTO lineDTO = new LineDTO(lineName);
+        this.lineService.addLine(lineDTO);
+    }
+}
+```
+
+제어 계층에 노선 추가 기능 매핑.
+
+### 1-2. READ
+
+```java
+// LineRepositoryTest.java
+
+package subway.domain;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+import subway.domain.line.Line;
+import subway.domain.line.LineRepository;
+
+public class LineRepositoryTest {
+    @Test
+    public void findByName() {
+        String name = "test";
+        Line line = new Line(name);
+        assertThat(LineRepository.findByName(name)).isNotPresent();
+        LineRepository.addLine(line);
+        assertThat(LineRepository.findByName(name)).isPresent();
+        LineRepository.deleteAll();
+    }
+}
+```
+
+```java
+// LineRepository.java
+
+package subway.domain.line;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+public class LineRepository {
+    public static Optional<Line> findByName(String name) {
+        return lines.stream().filter(line -> line.getName().equals(name)).findFirst();
+    }
+}
+```
+
+```java
+// LineServiceTest.java
+
+package subway.domain.line;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class LineServiceTest {
+    @Test
+    public void findOneByName() {
+        String name = "test";
+        LineDTO lineDTO = new LineDTO(name);
+        this.lineService.addLine(lineDTO);
+        Line line = this.lineService.findOneByName(name);
+        assertThat(line.getName()).isEqualTo(name);
+        this.lineService.deleteAll();
+    }
+
+    @Test
+    public void findOneByName__NotExistsException() {
+        String message = "존재하지 않은 노선입니다.";
+        assertThatThrownBy(() -> this.lineService.findOneByName("test")).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+}
+```
+
+```java
+// LineService.java
+
+package subway.domain.line;
+
+import java.util.List;
+
+public class LineService {
+    private static final String NOT_EXISTS_MESSAGE = "존재하지 않은 노선입니다.";
+
+    public Line findOneByName(String name) {
+        return LineRepository.findByName(name).orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_MESSAGE));
+    }
+}
+```
+
+노선 이름 기준 단건 조회 기능 구현.
