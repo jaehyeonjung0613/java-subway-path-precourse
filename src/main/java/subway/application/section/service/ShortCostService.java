@@ -13,7 +13,7 @@ import subway.domain.section.Section;
 import subway.domain.station.Station;
 
 abstract class ShortCostService {
-    protected final AbstractBaseGraph<Station, DefaultWeightedEdge> graph;
+    private final AbstractBaseGraph<Station, DefaultWeightedEdge> graph;
 
     public ShortCostService(AbstractBaseGraph<Station, DefaultWeightedEdge> graph) {
         this.graph = graph;

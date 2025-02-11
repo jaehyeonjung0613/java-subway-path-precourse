@@ -2143,7 +2143,7 @@ import subway.domain.section.Section;
 import subway.domain.station.Station;
 
 abstract class ShortCostService {
-    protected final AbstractBaseGraph<Station, DefaultWeightedEdge> graph;
+    private final AbstractBaseGraph<Station, DefaultWeightedEdge> graph;
 
     public ShortCostService(AbstractBaseGraph<Station, DefaultWeightedEdge> graph) {
         this.graph = graph;
@@ -2223,15 +2223,19 @@ abstract class ShortCostService {
 
 package subway.application.section.service;
 
+import org.jgrapht.graph.AbstractBaseGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import subway.domain.section.Section;
+import subway.domain.station.Station;
 
 class ShortDistanceService extends ShortCostService {
+    private static final AbstractBaseGraph<Station, DefaultWeightedEdge> graph = new DirectedWeightedMultigraph<>(
+        DefaultWeightedEdge.class);
+
     public ShortDistanceService() {
-        super(new DirectedWeightedMultigraph<>(
-            DefaultWeightedEdge.class));
+        super(graph);
     }
 
     @Override
@@ -2241,7 +2245,7 @@ class ShortDistanceService extends ShortCostService {
 }
 ```
 
-이후에 구현될 최소 시간 경로와 그래프 관련 기능은 유사하기 때문에 따로 추상 공통 함수를 생성하여 코드 중복 줄임.
+이후에 구현될 최소 시간 경로와 그래프 관련 기능은 유사하기 때문에 따로 추상 공통 클래스를 생성하여 코드 중복 방지.
 
 ## 7. 최소 시간 경로 구하기
 
