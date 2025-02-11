@@ -844,7 +844,7 @@ import subway.domain.station.StationDTO;
 
 public class SectionDTOTest {
     @Test
-    public void new__SectionAddingLineInfoEssentialException() {
+    public void constructor__SectionAddingLineInfoEssentialException() {
         StationDTO sourceDTO = new StationDTO("source");
         StationDTO sinkDTO = new StationDTO("sink");
         String message = "구간 생성시 노선 정보는 필수입니다.";
@@ -853,7 +853,7 @@ public class SectionDTOTest {
     }
 
     @Test
-    public void new__SectionAddingSourceStationInfoEssentialException() {
+    public void constructor__SectionAddingSourceStationInfoEssentialException() {
         LineDTO lineDTO = new LineDTO("line");
         StationDTO sinkDTO = new StationDTO("sink");
         String message = "구간 생성시 시작 지점 역 정보는 필수입니다.";
@@ -862,7 +862,7 @@ public class SectionDTOTest {
     }
 
     @Test
-    public void new__SectionAddingSinkStationInfoEssentialException() {
+    public void constructor__SectionAddingSinkStationInfoEssentialException() {
         LineDTO lineDTO = new LineDTO("line");
         StationDTO sourceDTO = new StationDTO("source");
         String message = "구간 생성시 종료 지점 역 정보는 필수입니다.";
