@@ -1605,3 +1605,524 @@ public class SectionService {
 ```
 
 무분별한 간선 추가를 방지하기 위해 Section Service 계층을 통해서만 처리되도록 함.
+
+## 5. 최단 거리 경로 구하기
+
+```java
+// ShortDistanceServiceTest.java
+
+package subway.application.section.service;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.jgrapht.GraphPath;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import subway.domain.line.Line;
+import subway.domain.section.Section;
+import subway.domain.station.Station;
+
+public class ShortDistanceServiceTest {
+    @Test
+    public void compute__NotExistsSourceNodeException() {
+        String message = "존재하지 않은 시작 지점 노드입니다.";
+        this.shortDistanceService.addNode(this.sink);
+        assertThatThrownBy(() -> this.shortDistanceService.compute(this.source, this.sink)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void compute__NotExistsSinkNodeException() {
+        String message = "존재하지 않은 종료 지점 노드입니다.";
+        this.shortDistanceService.addNode(this.source);
+        assertThatThrownBy(() -> this.shortDistanceService.compute(this.source, this.sink)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+}
+```
+
+```java
+// ShortDistanceService.java
+
+package subway.application.section.service;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
+
+import subway.domain.section.Section;
+import subway.domain.station.Station;
+
+public class ShortDistanceService {
+    protected GraphPath<Station, DefaultWeightedEdge> compute(Station source, Station sink) {
+        this.validateSource(source);
+        this.validateSink(sink);
+        DijkstraShortestPath<Station, DefaultWeightedEdge> dijkstraShortestPath = new DijkstraShortestPath<>(graph);
+        return dijkstraShortestPath.getPath(source, sink);
+    }
+
+    private void validateSource(Station source) {
+        if (!graph.containsVertex(source)) {
+            throw new IllegalArgumentException(NOT_EXISTS_SOURCE_NODE_MESSAGE);
+        }
+    }
+
+    private void validateSink(Station sink) {
+        if (!graph.containsVertex(sink)) {
+            throw new IllegalArgumentException(NOT_EXISTS_SINK_NODE_MESSAGE);
+        }
+    }
+}
+```
+
+최단 거리 경로 반환 기능 구현.
+
+```java
+// ShortCostRequestTest.java
+
+package subway.application.section.dto;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+import subway.domain.station.StationDTO;
+
+public class ShortCostRequestTest {
+    @Test
+    public void new_SourceStationInfoEssentialException() {
+        StationDTO sinkDTO = new StationDTO("sink");
+        String message = "시작 지점 역 정보는 필수입니다.";
+        assertThatThrownBy(() -> new ShortCostRequest(null, sinkDTO)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+
+    @Test
+    public void new_SinkStationInfoEssentialException() {
+        StationDTO sourceDTO = new StationDTO("source");
+        String message = "종료 지점 역 정보는 필수입니다.";
+        assertThatThrownBy(() -> new ShortCostRequest(sourceDTO, null)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+
+    @Test
+    public void new_SameSourceAndSinkStationException() {
+        StationDTO sourceDTO = new StationDTO("same");
+        StationDTO sinkDTO = new StationDTO("same");
+        String message = "출발역과 도착역이 동일합니다.";
+        assertThatThrownBy(() -> new ShortCostRequest(sourceDTO, sinkDTO)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+}
+```
+
+```java
+// StationDTO.java
+
+package subway.domain.station;
+
+import java.util.Objects;
+
+public class StationDTO {
+    @Override
+    public boolean equals(Object object) {
+        if (this == object)
+            return true;
+        if (!(object instanceof StationDTO))
+            return false;
+        StationDTO other = (StationDTO)object;
+        return Objects.equals(this.name, other.name);
+    }
+}
+```
+
+동일 체크를 위해 이름 기준으로 비교되도록 equal 오버라이딩.
+
+```java
+// ShortCostRequest.java
+
+package subway.application.section.dto;
+
+import subway.domain.station.StationDTO;
+
+public class ShortCostRequest {
+    private static final String SOURCE_STATION_INFO_ESSENTIAL_MESSAGE = "시작 지점 역 정보는 필수입니다.";
+    private static final String SINK_STATION_INFO_ESSENTIAL_MESSAGE = "종료 지점 역 정보는 필수입니다.";
+    private static final String SAME_SOURCE_AND_SINK_STATION_MESSAGE = "출발역과 도착역이 동일합니다.";
+
+    private final StationDTO sourceDTO;
+    private final StationDTO sinkDTO;
+
+    public ShortCostRequest(StationDTO sourceDTO, StationDTO sinkDTO) {
+        this.validate(sourceDTO, sinkDTO);
+        this.sourceDTO = sourceDTO;
+        this.sinkDTO = sinkDTO;
+    }
+
+    private void validate(StationDTO sourceDTO, StationDTO sinkDTO) {
+        if (sourceDTO == null) {
+            throw new IllegalArgumentException(SOURCE_STATION_INFO_ESSENTIAL_MESSAGE);
+        }
+        if (sinkDTO == null) {
+            throw new IllegalArgumentException(SINK_STATION_INFO_ESSENTIAL_MESSAGE);
+        }
+        if (sourceDTO.equals(sinkDTO)) {
+            throw new IllegalArgumentException(SAME_SOURCE_AND_SINK_STATION_MESSAGE);
+        }
+    }
+
+    public StationDTO getSourceDTO() {
+        return sourceDTO;
+    }
+
+    public StationDTO getSinkDTO() {
+        return sinkDTO;
+    }
+}
+```
+
+최단(최소) 경로 계산 요청 DTO 구현.
+
+```java
+// ShortCostResponseTest.java
+
+package subway.application.section.dto;
+
+import static org.assertj.core.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+
+import subway.domain.line.Line;
+import subway.domain.section.Section;
+import subway.domain.station.Station;
+
+public class ShortCostResponseTest {
+    @Test
+    public void constructor() {
+        Line line = new Line("line");
+        Station source = new Station("source");
+        Station sink = new Station("sink");
+        List<Station> stationList = Arrays.asList(source, sink);
+        int distance = 1;
+        int time = 8;
+        Section section = new Section(line, source, sink, distance, time);
+        source.addSection(section);
+        ShortCostResponse shortCostResponse = new ShortCostResponse(stationList);
+        assertThat(shortCostResponse.getTotalDistance()).isEqualTo(distance);
+        assertThat(shortCostResponse.getTotalTime()).isEqualTo(time);
+        assertThat(shortCostResponse.getStationNameList()).containsExactly(source.getName(), sink.getName());
+    }
+}
+```
+
+```java
+// StationTest.java
+
+package subway.domain.station;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+import subway.domain.line.Line;
+import subway.domain.section.Section;
+
+public class StationTest {
+    @Test
+    public void findDistanceTo() {
+        Line line = new Line("line");
+        Station source = new Station("source");
+        Station sink = new Station("sink");
+        int distance = 1;
+        Section section = new Section(line, source, sink, distance, 0);
+        source.addSection(section);
+        assertThat(source.findDistanceTo(sink)).isEqualTo(distance);
+    }
+
+    @Test
+    public void findDistanceTo__NotExistsPathToSinkStationException() {
+        Station source = new Station("source");
+        Station sink = new Station("sink");
+        String message = "종료 지점 역까지 경로가 존재하지 않습니다.";
+        assertThatThrownBy(() -> source.findDistanceTo(sink)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+
+    @Test
+    public void findTimeTo() {
+        Line line = new Line("line");
+        Station source = new Station("source");
+        Station sink = new Station("sink");
+        int time = 8;
+        Section section = new Section(line, source, sink, 0, time);
+        source.addSection(section);
+        assertThat(source.findTimeTo(sink)).isEqualTo(time);
+    }
+
+    @Test
+    public void findTimeTo__NotExistsPathToSinkStationException() {
+        Station source = new Station("source");
+        Station sink = new Station("sink");
+        String message = "종료 지점 역까지 경로가 존재하지 않습니다.";
+        assertThatThrownBy(() -> source.findTimeTo(sink)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+}
+```
+
+```java
+// Station.java
+
+package subway.domain.station;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import subway.domain.section.Section;
+
+public class Station {
+    private static final String NOT_EXISTS_PATH_TO_SINK_STATION_MESSAGE = "종료 지점 역까지 경로가 존재하지 않습니다.";
+
+    public int findDistanceTo(Station sink) {
+        return this.sectionList.stream()
+            .filter(section -> section.getSink() == sink)
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_PATH_TO_SINK_STATION_MESSAGE))
+            .getDistance();
+    }
+
+    public int findTimeTo(Station sink) {
+        return this.sectionList.stream()
+            .filter(section -> section.getSink() == sink)
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_PATH_TO_SINK_STATION_MESSAGE))
+            .getTime();
+    }
+}
+```
+
+지정 경로까지의 거리와 시간을 계산하기 위해 기능 구현.
+
+```java
+// ShortCostResponse.java
+
+package subway.application.section.dto;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import subway.domain.station.Station;
+
+public class ShortCostResponse {
+    private int totalDistance;
+    private int totalTime;
+    private final List<String> stationNameList;
+
+    public ShortCostResponse(List<Station> stationList) {
+        this.stationNameList = new ArrayList<>();
+        int length = stationList.size();
+        for (int index = 0; index < length; index++) {
+            Station source = stationList.get(index);
+            if (index + 1 < length) {
+                Station sink = stationList.get(index + 1);
+                totalDistance += source.findDistanceTo(sink);
+                totalTime += source.findTimeTo(sink);
+            }
+            stationNameList.add(source.getName());
+        }
+    }
+
+    public int getTotalDistance() {
+        return totalDistance;
+    }
+
+    public void setTotalDistance(int totalDistance) {
+        this.totalDistance = totalDistance;
+    }
+
+    public int getTotalTime() {
+        return totalTime;
+    }
+
+    public void setTotalTime(int totalTime) {
+        this.totalTime = totalTime;
+    }
+
+    public List<String> getStationNameList() {
+        return stationNameList;
+    }
+}
+```
+
+지정 경로까지 총 거리, 시간과 위치 정보를 반환 할 수 있도록 구현.
+
+```java
+// SectionServiceTest.java
+
+package subway.application.section.service;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import subway.application.section.dto.SectionDTO;
+import subway.application.section.dto.ShortCostRequest;
+import subway.application.section.dto.ShortCostResponse;
+import subway.domain.line.Line;
+import subway.domain.line.LineDTO;
+import subway.domain.line.LineService;
+import subway.domain.station.Station;
+import subway.domain.station.StationDTO;
+import subway.domain.station.StationService;
+
+public class SectionServiceTest {
+    private final ShortDistanceService shortDistanceService = new ShortDistanceService();
+
+    @Test
+    public void computeShortDistance() {
+        int distance = 1;
+        int time = 8;
+        SectionDTO sectionDTO = new SectionDTO(this.lineDTO, this.sourceDTO, this.sinkDTO, distance, time);
+        ShortCostRequest shortCostRequest = new ShortCostRequest(this.sourceDTO, this.sinkDTO);
+        this.sectionService.addNode(this.sourceDTO);
+        this.sectionService.addNode(this.sinkDTO);
+        this.sectionService.addSection(sectionDTO);
+        ShortCostResponse shortCostResponse = this.sectionService.computeShortDistance(shortCostRequest);
+        assertThat(shortCostResponse.getTotalDistance()).isEqualTo(distance);
+        assertThat(shortCostResponse.getTotalTime()).isEqualTo(time);
+        assertThat(shortCostResponse.getStationNameList()).containsExactly(this.sourceDTO.getName(),
+            this.sinkDTO.getName());
+    }
+
+    @Test
+    public void computeShortDistance__NotExistsSourceStationException() {
+        StationDTO otherDTO = new StationDTO("other");
+        ShortCostRequest shortCostRequest = new ShortCostRequest(otherDTO, this.sinkDTO);
+        String message = "존재하지 않은 시작 지점 역입니다.";
+        assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void computeShortDistance__NotExistsSinkStationException() {
+        StationDTO otherDTO = new StationDTO("other");
+        ShortCostRequest shortCostRequest = new ShortCostRequest(this.sourceDTO, otherDTO);
+        String message = "존재하지 않은 종료 지점 역입니다.";
+        assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void computeShortDistance__NotConnectedSourceAndSinkStationException() {
+        ShortCostRequest shortCostRequest = new ShortCostRequest(this.sourceDTO, this.sinkDTO);
+        String message = "시작 지점과 종료 지점 역이 연결되어 있지 않습니다.";
+        this.sectionService.addNode(this.sourceDTO);
+        this.sectionService.addNode(this.sinkDTO);
+        assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @AfterEach
+    public void init() {
+        this.lineService.deleteAll();
+        this.stationService.deleteAll();
+        this.sectionService.deleteAll();
+        this.shortDistanceService.deleteAll();
+    }
+}
+```
+
+```java
+// StationService.java
+
+package subway.domain.station;
+
+import java.util.List;
+import java.util.Optional;
+
+public class StationService {
+    public Optional<Station> findByName(String name) {
+        return StationRepository.findByName(name);
+    }
+}
+```
+
+```java
+// SectionService.java
+
+package subway.application.section.service;
+
+import java.util.List;
+
+import org.jgrapht.GraphPath;
+import org.jgrapht.graph.DefaultWeightedEdge;
+
+import subway.application.section.dto.SectionDTO;
+import subway.application.section.dto.ShortCostRequest;
+import subway.application.section.dto.ShortCostResponse;
+import subway.domain.line.Line;
+import subway.domain.line.LineService;
+import subway.domain.section.Section;
+import subway.domain.section.SectionRepository;
+import subway.domain.station.Station;
+import subway.domain.station.StationDTO;
+import subway.domain.station.StationService;
+
+public class SectionService {
+    private static final String NOT_EXISTS_SOURCE_STATION_MESSAGE = "존재하지 않은 시작 지점 역입니다.";
+    private static final String NOT_EXISTS_SINK_STATION_MESSAGE = "존재하지 않은 종료 지점 역입니다.";
+    private static final String NOT_CONNECTED_SOURCE_AND_SINK_STATION_MESSAGE = "시작 지점과 종료 지점 역이 연결되어 있지 않습니다.";
+
+    public ShortCostResponse computeShortDistance(ShortCostRequest shortCostRequest) {
+        Station source = this.stationService.findByName(shortCostRequest.getSourceDTO().getName())
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_SOURCE_STATION_MESSAGE));
+        Station sink = this.stationService.findByName(shortCostRequest.getSinkDTO().getName())
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_SINK_STATION_MESSAGE));
+        GraphPath<Station, DefaultWeightedEdge> graphPath = this.shortDistanceService.compute(source, sink);
+        if (graphPath == null) {
+            throw new IllegalArgumentException(NOT_CONNECTED_SOURCE_AND_SINK_STATION_MESSAGE);
+        }
+        return new ShortCostResponse(graphPath.getVertexList());
+    }
+}
+```
+
+최단 거리 계산 구현.
+
+```java
+// SectionController.java
+
+package subway.presentation;
+
+import subway.application.section.dto.SectionDTO;
+import subway.application.section.dto.ShortCostRequest;
+import subway.application.section.dto.ShortCostResponse;
+import subway.application.section.service.SectionService;
+import subway.domain.line.LineDTO;
+import subway.domain.station.StationDTO;
+import subway.util.Validation;
+
+public class SectionController {
+    public ShortCostResponse computeShortDistance(String sourceName, String sinkName) {
+        StationDTO sourceDTO = new StationDTO(sourceName);
+        StationDTO sinkDTO = new StationDTO(sinkName);
+        ShortCostRequest shortCostRequest = new ShortCostRequest(sourceDTO, sinkDTO);
+        return this.sectionService.computeShortDistance(shortCostRequest);
+    }
+}
+```
+
+제어 계층에 최단 거리 계산 기능 매핑.
