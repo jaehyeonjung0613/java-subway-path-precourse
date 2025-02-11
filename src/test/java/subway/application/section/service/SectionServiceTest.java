@@ -25,6 +25,7 @@ public class SectionServiceTest {
     private final StationService stationService = new StationService();
     private final SectionService sectionService = new SectionService();
     private final ShortDistanceService shortDistanceService = new ShortDistanceService();
+    private final ShortTimeService shortTimeService = new ShortTimeService();
 
     @BeforeEach
     public void setup() {
@@ -111,5 +112,6 @@ public class SectionServiceTest {
         this.stationService.deleteAll();
         this.sectionService.deleteAll();
         this.shortDistanceService.deleteAll();
+        this.shortTimeService.deleteAll();
     }
 }

@@ -25,6 +25,7 @@ public class SectionService {
     private final LineService lineService = new LineService();
     private final StationService stationService = new StationService();
     private final ShortDistanceService shortDistanceService = new ShortDistanceService();
+    private final ShortTimeService shortTimeService = new ShortTimeService();
 
     public List<Section> findAll() {
         return SectionRepository.sections();
@@ -33,6 +34,7 @@ public class SectionService {
     public void addNode(StationDTO stationDTO) {
         Station station = this.stationService.findOneByName(stationDTO.getName());
         this.shortDistanceService.addNode(station);
+        this.shortTimeService.addNode(station);
     }
 
     public void addSection(SectionDTO sectionDTO) {
@@ -44,12 +46,25 @@ public class SectionService {
             throw new IllegalArgumentException(ALREADY_EXISTS_SECTION_MESSAGE);
         }
         SectionRepository.addSection(section);
-        shortDistanceService.addEdge(section);
+        this.shortDistanceService.addEdge(section);
+        this.shortTimeService.addEdge(section);
         line.addSection(section);
         source.addSection(section);
     }
 
     public ShortCostResponse computeShortDistance(ShortCostRequest shortCostRequest) {
+        Station source = this.stationService.findByName(shortCostRequest.getSourceDTO().getName())
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_SOURCE_STATION_MESSAGE));
+        Station sink = this.stationService.findByName(shortCostRequest.getSinkDTO().getName())
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_SINK_STATION_MESSAGE));
+        GraphPath<Station, DefaultWeightedEdge> graphPath = this.shortDistanceService.compute(source, sink);
+        if (graphPath == null) {
+            throw new IllegalArgumentException(NOT_CONNECTED_SOURCE_AND_SINK_STATION_MESSAGE);
+        }
+        return new ShortCostResponse(graphPath.getVertexList());
+    }
+
+    public ShortCostResponse computeShortTime(ShortCostRequest shortCostRequest) {
         Station source = this.stationService.findByName(shortCostRequest.getSourceDTO().getName())
             .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_SOURCE_STATION_MESSAGE));
         Station sink = this.stationService.findByName(shortCostRequest.getSinkDTO().getName())
