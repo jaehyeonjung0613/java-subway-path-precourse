@@ -8,7 +8,7 @@ import subway.domain.station.StationDTO;
 
 public class ShortCostRequestTest {
     @Test
-    public void new_SourceStationInfoEssentialException() {
+    public void constructor__SourceStationInfoEssentialException() {
         StationDTO sinkDTO = new StationDTO("sink");
         String message = "시작 지점 역 정보는 필수입니다.";
         assertThatThrownBy(() -> new ShortCostRequest(null, sinkDTO)).isInstanceOf(IllegalArgumentException.class)
@@ -16,7 +16,7 @@ public class ShortCostRequestTest {
     }
 
     @Test
-    public void new_SinkStationInfoEssentialException() {
+    public void constructor__SinkStationInfoEssentialException() {
         StationDTO sourceDTO = new StationDTO("source");
         String message = "종료 지점 역 정보는 필수입니다.";
         assertThatThrownBy(() -> new ShortCostRequest(sourceDTO, null)).isInstanceOf(IllegalArgumentException.class)
@@ -24,7 +24,7 @@ public class ShortCostRequestTest {
     }
 
     @Test
-    public void new_SameSourceAndSinkStationException() {
+    public void constructor__SameSourceAndSinkStationException() {
         StationDTO sourceDTO = new StationDTO("same");
         StationDTO sinkDTO = new StationDTO("same");
         String message = "출발역과 도착역이 동일합니다.";
