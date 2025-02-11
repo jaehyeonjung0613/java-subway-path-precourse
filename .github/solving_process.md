@@ -411,7 +411,7 @@ public class StationService {
     public List<Station> findAll() {
         return StationRepository.stations();
     }
-    
+
     public void deleteAll() {
         StationRepository.deleteAll();
     }
@@ -514,7 +514,7 @@ import java.util.List;
 
 public class StationService {
     private static final String ALREADY_EXISTS_STATION_MESSAGE = "이미 등록되어있는 역입니다.";
-    
+
     public void addStation(StationDTO stationDTO) {
         Station station = new Station(stationDTO.getName());
         if (StationRepository.exists(station)) {
@@ -735,23 +735,23 @@ import subway.domain.section.Section;
 
 public class Line {
     private static final String SECTION_ADDING_OTHER_LINE_RECEIVE_MESSAGE = "구간 추가시 다른 노선을 받았습니다.";
-    
+
     private final List<Section> sectionList = new ArrayList<>();
-    
+
     public void addSection(Section section) {
         this.validateSection(section);
         this.sectionList.add(section);
     }
 
     private void validateSection(Section section) {
-        if(this != section.getLine()) {
+        if (this != section.getLine()) {
             throw new IllegalArgumentException(SECTION_ADDING_OTHER_LINE_RECEIVE_MESSAGE);
         }
     }
 }
 ```
 
-Line 1 : N  매칭.
+Line 1 : N 매칭.
 
 Section 추가 기능 구현.
 
@@ -806,9 +806,9 @@ import subway.domain.section.Section;
 
 public class Station {
     private static final String SECTION_ADDING_OTHER_SOURCE_STATION_RECEIVE_MESSAGE = "구간 추가시 다른 시작 지점 역을 받았습니다.";
-    
+
     private final List<Section> sectionList = new ArrayList<>();
-    
+
     public List<Section> getSectionList() {
         return Collections.unmodifiableList(this.sectionList);
     }
@@ -819,14 +819,14 @@ public class Station {
     }
 
     public void validateSection(Section section) {
-        if(this != section.getSource()) {
+        if (this != section.getSource()) {
             throw new IllegalArgumentException(SECTION_ADDING_OTHER_SOURCE_STATION_RECEIVE_MESSAGE);
         }
     }
 }
 ```
 
-Station 1 : N  매칭.
+Station 1 : N 매칭.
 
 Section 추가 기능 구현.
 
@@ -1296,7 +1296,7 @@ public class SectionController {
     }
 
     private void validateDistance(String distance) {
-        if(distance == null || distance.trim().isEmpty()) {
+        if (distance == null || distance.trim().isEmpty()) {
             throw new IllegalArgumentException(INPUT_ESSENTIAL_DISTANCE_MESSAGE);
         }
         if (!Validation.isNumeric(distance)) {
@@ -1305,7 +1305,7 @@ public class SectionController {
     }
 
     private void validateTime(String time) {
-        if(time == null || time.trim().isEmpty()) {
+        if (time == null || time.trim().isEmpty()) {
             throw new IllegalArgumentException(INPUT_ESSENTIAL_TIME_MESSAGE);
         }
         if (!Validation.isNumeric(time)) {
@@ -1317,7 +1317,291 @@ public class SectionController {
 
 제어 계층에 구간 추가 기능 매핑.
 
+## 4. 최단 거리 노드, 간선 추가
 
+### 4-1. 노드
 
+```java
+// ShortDistanceService.java
 
+package subway.application.section.service;
 
+import java.util.Collections;
+import java.util.Set;
+
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
+
+import subway.domain.station.Station;
+
+public class ShortDistanceService {
+    private static final DirectedWeightedMultigraph<Station, DefaultWeightedEdge> graph = new DirectedWeightedMultigraph<>(
+        DefaultWeightedEdge.class);
+
+    protected Set<Station> findAllNode() {
+        return Collections.unmodifiableSet(graph.vertexSet());
+    }
+
+    protected void deleteAllNode() {
+        Set<Station> nodes = new HashSet<>(this.findAllNode());
+        graph.removeAllVertices(nodes);
+    }
+}
+```
+
+기본 전체 조회 및 삭제 기능 생성.
+
+```java
+// ShortDistanceServiceTest.java
+
+package subway.application.section.service;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import subway.domain.station.Station;
+
+public class ShortDistanceServiceTest {
+    private final Station source = new Station("source");
+
+    private final ShortDistanceService shortDistanceService = new ShortDistanceService();
+
+    @Test
+    public void addNode() {
+        assertThat(this.shortDistanceService.findAllNode()).hasSize(0);
+        this.shortDistanceService.addNode(this.source);
+        assertThat(this.shortDistanceService.findAllNode()).hasSize(1);
+    }
+
+    @Test
+    public void addNode_AlreadyExistsNodeException() {
+        String message = "이미 등록되어있는 노드입니다.";
+        this.shortDistanceService.addNode(this.source);
+        assertThatThrownBy(() -> this.shortDistanceService.addNode(this.source)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @AfterEach
+    public void init() {
+        this.shortDistanceService.deleteAllNode();
+    }
+}
+```
+
+```java
+// ShortDistanceService.java
+
+package subway.application.section.service;
+
+import java.util.Collections;
+import java.util.Set;
+
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
+
+import subway.domain.station.Station;
+
+public class ShortDistanceService {
+    private static final String ALREADY_EXISTS_NODE_MESSAGE = "이미 등록되어있는 노드입니다.";
+
+    protected void addNode(Station station) {
+        if (graph.containsVertex(station)) {
+            throw new IllegalArgumentException(ALREADY_EXISTS_NODE_MESSAGE);
+        }
+        graph.addVertex(station);
+    }
+}
+```
+
+노선 추가 기능 구현.
+
+```java
+// SectionService.java
+
+package subway.application.section.service;
+
+import java.util.List;
+
+import subway.application.section.dto.SectionDTO;
+import subway.domain.line.Line;
+import subway.domain.line.LineService;
+import subway.domain.section.Section;
+import subway.domain.section.SectionRepository;
+import subway.domain.station.Station;
+import subway.domain.station.StationDTO;
+import subway.domain.station.StationService;
+
+public class SectionService {
+    private final ShortDistanceService shortDistanceService = new ShortDistanceService();
+
+    public void addNode(StationDTO stationDTO) {
+        Station station = this.stationService.findOneByName(stationDTO.getName());
+        this.shortDistanceService.addNode(station);
+    }
+}
+```
+
+무분별한 노드 추가를 방지하기 위해 Section Service 계층을 통해서만 처리되도록 함.
+
+## 4-2. 간선
+
+```java
+// ShortDistanceService.java
+
+package subway.application.section.service;
+
+import java.util.Collections;
+import java.util.Set;
+
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
+
+import subway.domain.station.Station;
+
+public class ShortDistanceService {
+    protected Set<DefaultWeightedEdge> findAllEdge() {
+        return Collections.unmodifiableSet(graph.edgeSet());
+    }
+
+    protected void deleteAllEdge() {
+        graph.removeAllEdges(graph.edgeSet());
+    }
+
+    protected void deleteAll() {
+        this.deleteAllEdge();
+        this.deleteAllNode();
+    }
+}
+```
+
+기본 전체 조회 및 삭제 기능 생성.
+
+```java
+// ShortDistanceServiceTest.java
+
+package subway.application.section.service;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import subway.domain.line.Line;
+import subway.domain.section.Section;
+import subway.domain.station.Station;
+
+public class ShortDistanceServiceTest {
+    private final Line line = new Line("line");
+    private final Station sink = new Station("sink");
+
+    @Test
+    public void addEdge_NotExistsSourceNodeException() {
+        Section section = new Section(this.line, this.source, this.sink, 0, 0);
+        String message = "존재하지 않은 시작 지점 노드입니다.";
+        this.shortDistanceService.addNode(this.sink);
+        assertThatThrownBy(() -> this.shortDistanceService.addEdge(section)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void addEdge_NotExistsSinkNodeException() {
+        Section section = new Section(this.line, this.source, this.sink, 0, 0);
+        String message = "존재하지 않은 종료 지점 노드입니다.";
+        this.shortDistanceService.addNode(this.source);
+        assertThatThrownBy(() -> this.shortDistanceService.addEdge(section)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void addEdge_AlreadyExistsEdgeException() {
+        Section section = new Section(this.line, this.source, this.sink, 0, 0);
+        String message = "이미 등록되어있는 간선입니다.";
+        this.shortDistanceService.addNode(this.source);
+        this.shortDistanceService.addNode(this.sink);
+        this.shortDistanceService.addEdge(section);
+        assertThatThrownBy(() -> this.shortDistanceService.addEdge(section)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @AfterEach
+    public void init() {
+        this.shortDistanceService.deleteAll();
+    }
+}
+```
+
+```java
+// ShortDistanceService.java
+
+package subway.application.section.service;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
+
+import subway.domain.section.Section;
+import subway.domain.station.Station;
+
+public class ShortDistanceService {
+    private static final String NOT_EXISTS_SOURCE_NODE_MESSAGE = "존재하지 않은 시작 지점 노드입니다.";
+    private static final String NOT_EXISTS_SINK_NODE_MESSAGE = "존재하지 않은 종료 지점 노드입니다.";
+    private static final String ALREADY_EXISTS_EDGE_MESSAGE = "이미 등록되어있는 간선입니다.";
+
+    protected void addEdge(Section section) {
+        Station source = section.getSource();
+        Station sink = section.getSink();
+        if (!graph.containsVertex(source)) {
+            throw new IllegalArgumentException(NOT_EXISTS_SOURCE_NODE_MESSAGE);
+        }
+        if (!graph.containsVertex(sink)) {
+            throw new IllegalArgumentException(NOT_EXISTS_SINK_NODE_MESSAGE);
+        }
+        if (graph.containsEdge(source, sink)) {
+            throw new IllegalArgumentException(ALREADY_EXISTS_EDGE_MESSAGE);
+        }
+        graph.setEdgeWeight(graph.addEdge(source, sink), section.getDistance());
+    }
+}
+```
+
+간선 추가 기능 구현.
+
+```java
+// SectionService.java
+
+package subway.application.section.service;
+
+import java.util.List;
+
+import subway.application.section.dto.SectionDTO;
+import subway.domain.line.Line;
+import subway.domain.line.LineService;
+import subway.domain.section.Section;
+import subway.domain.section.SectionRepository;
+import subway.domain.station.Station;
+import subway.domain.station.StationDTO;
+import subway.domain.station.StationService;
+
+public class SectionService {
+    public void addSection(SectionDTO sectionDTO) {
+        Line line = this.lineService.findOneByName(sectionDTO.getLineDTO().getName());
+        Station source = this.stationService.findOneByName(sectionDTO.getSourceDTO().getName());
+        Station sink = this.stationService.findOneByName(sectionDTO.getSinkDTO().getName());
+        Section section = new Section(line, source, sink, sectionDTO.getDistance(), sectionDTO.getTime());
+        if (SectionRepository.exists(section)) {
+            throw new IllegalArgumentException(ALREADY_EXISTS_SECTION_MESSAGE);
+        }
+        SectionRepository.addSection(section);
+        +shortDistanceService.addEdge(section);
+        line.addSection(section);
+        source.addSection(section);
+    }
+}
+```
+
+무분별한 간선 추가를 방지하기 위해 Section Service 계층을 통해서만 처리되도록 함.
