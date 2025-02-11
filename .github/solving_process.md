@@ -1334,7 +1334,7 @@ import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import subway.domain.station.Station;
 
-public class ShortDistanceService {
+class shortDistanceService {
     private static final DirectedWeightedMultigraph<Station, DefaultWeightedEdge> graph = new DirectedWeightedMultigraph<>(
         DefaultWeightedEdge.class);
 
@@ -1363,7 +1363,7 @@ import org.junit.jupiter.api.Test;
 
 import subway.domain.station.Station;
 
-public class ShortDistanceServiceTest {
+class shortDistanceServiceTest {
     private final Station source = new Station("source");
 
     private final ShortDistanceService shortDistanceService = new ShortDistanceService();
@@ -1403,7 +1403,7 @@ import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import subway.domain.station.Station;
 
-public class ShortDistanceService {
+class shortDistanceService {
     private static final String ALREADY_EXISTS_NODE_MESSAGE = "이미 등록되어있는 노드입니다.";
 
     protected void addNode(Station station) {
@@ -1460,7 +1460,7 @@ import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import subway.domain.station.Station;
 
-public class ShortDistanceService {
+class shortDistanceService {
     protected Set<DefaultWeightedEdge> findAllEdge() {
         return Collections.unmodifiableSet(graph.edgeSet());
     }
@@ -1492,7 +1492,7 @@ import subway.domain.line.Line;
 import subway.domain.section.Section;
 import subway.domain.station.Station;
 
-public class ShortDistanceServiceTest {
+class shortDistanceServiceTest {
     private final Line line = new Line("line");
     private final Station sink = new Station("sink");
 
@@ -1547,7 +1547,7 @@ import org.jgrapht.graph.DirectedWeightedMultigraph;
 import subway.domain.section.Section;
 import subway.domain.station.Station;
 
-public class ShortDistanceService {
+class shortDistanceService {
     private static final String NOT_EXISTS_SOURCE_NODE_MESSAGE = "존재하지 않은 시작 지점 노드입니다.";
     private static final String NOT_EXISTS_SINK_NODE_MESSAGE = "존재하지 않은 종료 지점 노드입니다.";
     private static final String ALREADY_EXISTS_EDGE_MESSAGE = "이미 등록되어있는 간선입니다.";
@@ -1555,16 +1555,24 @@ public class ShortDistanceService {
     protected void addEdge(Section section) {
         Station source = section.getSource();
         Station sink = section.getSink();
-        if (!graph.containsVertex(source)) {
-            throw new IllegalArgumentException(NOT_EXISTS_SOURCE_NODE_MESSAGE);
-        }
-        if (!graph.containsVertex(sink)) {
-            throw new IllegalArgumentException(NOT_EXISTS_SINK_NODE_MESSAGE);
-        }
+        this.validateSource(source);
+        this.validateSink(sink);
         if (graph.containsEdge(source, sink)) {
             throw new IllegalArgumentException(ALREADY_EXISTS_EDGE_MESSAGE);
         }
         graph.setEdgeWeight(graph.addEdge(source, sink), section.getDistance());
+    }
+
+    private void validateSource(Station source) {
+        if (!graph.containsVertex(source)) {
+            throw new IllegalArgumentException(NOT_EXISTS_SOURCE_NODE_MESSAGE);
+        }
+    }
+
+    private void validateSink(Station sink) {
+        if (!graph.containsVertex(sink)) {
+            throw new IllegalArgumentException(NOT_EXISTS_SINK_NODE_MESSAGE);
+        }
     }
 }
 ```
@@ -1624,7 +1632,7 @@ import subway.domain.line.Line;
 import subway.domain.section.Section;
 import subway.domain.station.Station;
 
-public class ShortDistanceServiceTest {
+class shortDistanceServiceTest {
     @Test
     public void compute__NotExistsSourceNodeException() {
         String message = "존재하지 않은 시작 지점 노드입니다.";
@@ -1660,24 +1668,12 @@ import org.jgrapht.graph.DirectedWeightedMultigraph;
 import subway.domain.section.Section;
 import subway.domain.station.Station;
 
-public class ShortDistanceService {
+class shortDistanceService {
     protected GraphPath<Station, DefaultWeightedEdge> compute(Station source, Station sink) {
         this.validateSource(source);
         this.validateSink(sink);
         DijkstraShortestPath<Station, DefaultWeightedEdge> dijkstraShortestPath = new DijkstraShortestPath<>(graph);
         return dijkstraShortestPath.getPath(source, sink);
-    }
-
-    private void validateSource(Station source) {
-        if (!graph.containsVertex(source)) {
-            throw new IllegalArgumentException(NOT_EXISTS_SOURCE_NODE_MESSAGE);
-        }
-    }
-
-    private void validateSink(Station sink) {
-        if (!graph.containsVertex(sink)) {
-            throw new IllegalArgumentException(NOT_EXISTS_SINK_NODE_MESSAGE);
-        }
     }
 }
 ```

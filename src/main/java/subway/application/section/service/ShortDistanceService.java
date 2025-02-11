@@ -12,7 +12,7 @@ import org.jgrapht.graph.DirectedWeightedMultigraph;
 import subway.domain.section.Section;
 import subway.domain.station.Station;
 
-public class ShortDistanceService {
+class ShortDistanceService {
     private static final DirectedWeightedMultigraph<Station, DefaultWeightedEdge> graph = new DirectedWeightedMultigraph<>(
         DefaultWeightedEdge.class);
 
@@ -39,12 +39,8 @@ public class ShortDistanceService {
     protected void addEdge(Section section) {
         Station source = section.getSource();
         Station sink = section.getSink();
-        if (!graph.containsVertex(source)) {
-            throw new IllegalArgumentException(NOT_EXISTS_SOURCE_NODE_MESSAGE);
-        }
-        if (!graph.containsVertex(sink)) {
-            throw new IllegalArgumentException(NOT_EXISTS_SINK_NODE_MESSAGE);
-        }
+        this.validateSource(source);
+        this.validateSink(sink);
         if (graph.containsEdge(source, sink)) {
             throw new IllegalArgumentException(ALREADY_EXISTS_EDGE_MESSAGE);
         }
