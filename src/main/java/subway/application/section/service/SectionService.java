@@ -2,7 +2,12 @@ package subway.application.section.service;
 
 import java.util.List;
 
+import org.jgrapht.GraphPath;
+import org.jgrapht.graph.DefaultWeightedEdge;
+
 import subway.application.section.dto.SectionDTO;
+import subway.application.section.dto.ShortCostRequest;
+import subway.application.section.dto.ShortCostResponse;
 import subway.domain.line.Line;
 import subway.domain.line.LineService;
 import subway.domain.section.Section;
@@ -13,6 +18,9 @@ import subway.domain.station.StationService;
 
 public class SectionService {
     private static final String ALREADY_EXISTS_SECTION_MESSAGE = "이미 등록되어있는 구간입니다.";
+    private static final String NOT_EXISTS_SOURCE_STATION_MESSAGE = "존재하지 않은 시작 지점 역입니다.";
+    private static final String NOT_EXISTS_SINK_STATION_MESSAGE = "존재하지 않은 종료 지점 역입니다.";
+    private static final String NOT_CONNECTED_SOURCE_AND_SINK_STATION_MESSAGE = "시작 지점과 종료 지점 역이 연결되어 있지 않습니다.";
 
     private final LineService lineService = new LineService();
     private final StationService stationService = new StationService();
@@ -39,6 +47,18 @@ public class SectionService {
         shortDistanceService.addEdge(section);
         line.addSection(section);
         source.addSection(section);
+    }
+
+    public ShortCostResponse computeShortDistance(ShortCostRequest shortCostRequest) {
+        Station source = this.stationService.findByName(shortCostRequest.getSourceDTO().getName())
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_SOURCE_STATION_MESSAGE));
+        Station sink = this.stationService.findByName(shortCostRequest.getSinkDTO().getName())
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_SINK_STATION_MESSAGE));
+        GraphPath<Station, DefaultWeightedEdge> graphPath = this.shortDistanceService.compute(source, sink);
+        if (graphPath == null) {
+            throw new IllegalArgumentException(NOT_CONNECTED_SOURCE_AND_SINK_STATION_MESSAGE);
+        }
+        return new ShortCostResponse(graphPath.getVertexList());
     }
 
     public void deleteAll() {

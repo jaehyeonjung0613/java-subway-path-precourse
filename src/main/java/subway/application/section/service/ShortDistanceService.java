@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 
@@ -47,6 +49,25 @@ public class ShortDistanceService {
             throw new IllegalArgumentException(ALREADY_EXISTS_EDGE_MESSAGE);
         }
         graph.setEdgeWeight(graph.addEdge(source, sink), section.getDistance());
+    }
+
+    protected GraphPath<Station, DefaultWeightedEdge> compute(Station source, Station sink) {
+        this.validateSource(source);
+        this.validateSink(sink);
+        DijkstraShortestPath<Station, DefaultWeightedEdge> dijkstraShortestPath = new DijkstraShortestPath<>(graph);
+        return dijkstraShortestPath.getPath(source, sink);
+    }
+
+    private void validateSource(Station source) {
+        if (!graph.containsVertex(source)) {
+            throw new IllegalArgumentException(NOT_EXISTS_SOURCE_NODE_MESSAGE);
+        }
+    }
+
+    private void validateSink(Station sink) {
+        if (!graph.containsVertex(sink)) {
+            throw new IllegalArgumentException(NOT_EXISTS_SINK_NODE_MESSAGE);
+        }
     }
 
     protected void deleteAllNode() {

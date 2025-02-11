@@ -2,6 +2,8 @@ package subway.application.section.service;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.jgrapht.GraphPath;
+import org.jgrapht.graph.DefaultWeightedEdge;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -67,6 +69,34 @@ public class ShortDistanceServiceTest {
         this.shortDistanceService.addNode(this.sink);
         this.shortDistanceService.addEdge(section);
         assertThatThrownBy(() -> this.shortDistanceService.addEdge(section)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void compute() {
+        int distance = 7;
+        Section section = new Section(this.line, this.source, this.sink, distance, 0);
+        this.shortDistanceService.addNode(this.source);
+        this.shortDistanceService.addNode(this.sink);
+        this.shortDistanceService.addEdge(section);
+        GraphPath<Station, DefaultWeightedEdge> graphPath = this.shortDistanceService.compute(this.source, this.sink);
+        assertThat(graphPath.getWeight()).isEqualTo(distance);
+        assertThat(graphPath.getVertexList()).containsExactly(this.source, this.sink);
+    }
+
+    @Test
+    public void compute__NotExistsSourceNodeException() {
+        String message = "존재하지 않은 시작 지점 노드입니다.";
+        this.shortDistanceService.addNode(this.sink);
+        assertThatThrownBy(() -> this.shortDistanceService.compute(this.source, this.sink)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void compute__NotExistsSinkNodeException() {
+        String message = "존재하지 않은 종료 지점 노드입니다.";
+        this.shortDistanceService.addNode(this.source);
+        assertThatThrownBy(() -> this.shortDistanceService.compute(this.source, this.sink)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
     }
 

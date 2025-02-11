@@ -1,6 +1,8 @@
 package subway.presentation;
 
 import subway.application.section.dto.SectionDTO;
+import subway.application.section.dto.ShortCostRequest;
+import subway.application.section.dto.ShortCostResponse;
 import subway.application.section.service.SectionService;
 import subway.domain.line.LineDTO;
 import subway.domain.station.StationDTO;
@@ -27,7 +29,7 @@ public class SectionController {
     }
 
     private void validateDistance(String distance) {
-        if(distance == null || distance.trim().isEmpty()) {
+        if (distance == null || distance.trim().isEmpty()) {
             throw new IllegalArgumentException(INPUT_ESSENTIAL_DISTANCE_MESSAGE);
         }
         if (!Validation.isNumeric(distance)) {
@@ -36,11 +38,18 @@ public class SectionController {
     }
 
     private void validateTime(String time) {
-        if(time == null || time.trim().isEmpty()) {
+        if (time == null || time.trim().isEmpty()) {
             throw new IllegalArgumentException(INPUT_ESSENTIAL_TIME_MESSAGE);
         }
         if (!Validation.isNumeric(time)) {
             throw new IllegalArgumentException(ONLY_POSSIBLE_NUMERIC_INPUT_TIME_MESSAGE);
         }
+    }
+
+    public ShortCostResponse computeShortDistance(String sourceName, String sinkName) {
+        StationDTO sourceDTO = new StationDTO(sourceName);
+        StationDTO sinkDTO = new StationDTO(sinkName);
+        ShortCostRequest shortCostRequest = new ShortCostRequest(sourceDTO, sinkDTO);
+        return this.sectionService.computeShortDistance(shortCostRequest);
     }
 }

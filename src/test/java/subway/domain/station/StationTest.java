@@ -30,4 +30,44 @@ public class StationTest {
         assertThatThrownBy(() -> source.addSection(section)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
+
+    @Test
+    public void findDistanceTo() {
+        Line line = new Line("line");
+        Station source = new Station("source");
+        Station sink = new Station("sink");
+        int distance = 1;
+        Section section = new Section(line, source, sink, distance, 0);
+        source.addSection(section);
+        assertThat(source.findDistanceTo(sink)).isEqualTo(distance);
+    }
+
+    @Test
+    public void findDistanceTo__NotExistsPathToSinkStationException() {
+        Station source = new Station("source");
+        Station sink = new Station("sink");
+        String message = "종료 지점 역까지 경로가 존재하지 않습니다.";
+        assertThatThrownBy(() -> source.findDistanceTo(sink)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+
+    @Test
+    public void findTimeTo() {
+        Line line = new Line("line");
+        Station source = new Station("source");
+        Station sink = new Station("sink");
+        int time = 8;
+        Section section = new Section(line, source, sink, 0, time);
+        source.addSection(section);
+        assertThat(source.findTimeTo(sink)).isEqualTo(time);
+    }
+
+    @Test
+    public void findTimeTo__NotExistsPathToSinkStationException() {
+        Station source = new Station("source");
+        Station sink = new Station("sink");
+        String message = "종료 지점 역까지 경로가 존재하지 않습니다.";
+        assertThatThrownBy(() -> source.findTimeTo(sink)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
 }

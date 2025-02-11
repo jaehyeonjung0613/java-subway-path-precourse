@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import subway.application.section.dto.SectionDTO;
+import subway.application.section.dto.ShortCostRequest;
+import subway.application.section.dto.ShortCostResponse;
 import subway.domain.line.Line;
 import subway.domain.line.LineDTO;
 import subway.domain.line.LineService;
@@ -22,6 +24,7 @@ public class SectionServiceTest {
     private final LineService lineService = new LineService();
     private final StationService stationService = new StationService();
     private final SectionService sectionService = new SectionService();
+    private final ShortDistanceService shortDistanceService = new ShortDistanceService();
 
     @BeforeEach
     public void setup() {
@@ -38,6 +41,8 @@ public class SectionServiceTest {
         assertThat(this.sectionService.findAll()).hasSize(0);
         assertThat(line.getSectionList()).hasSize(0);
         assertThat(source.getSectionList()).hasSize(0);
+        this.sectionService.addNode(this.sourceDTO);
+        this.sectionService.addNode(this.sinkDTO);
         this.sectionService.addSection(sectionDTO);
         assertThat(this.sectionService.findAll()).hasSize(1);
         assertThat(line.getSectionList()).hasSize(1);
@@ -48,16 +53,63 @@ public class SectionServiceTest {
     public void addSection__AlreadyExistsSectionException() {
         SectionDTO sectionDTO = new SectionDTO(lineDTO, sourceDTO, sinkDTO);
         String message = "이미 등록되어있는 구간입니다.";
+        this.sectionService.addNode(this.sourceDTO);
+        this.sectionService.addNode(this.sinkDTO);
         this.sectionService.addSection(sectionDTO);
         assertThatThrownBy(() -> this.sectionService.addSection(sectionDTO)).isInstanceOf(
                 IllegalArgumentException.class)
             .hasMessage(message);
     }
 
+    @Test
+    public void computeShortDistance() {
+        int distance = 1;
+        int time = 8;
+        SectionDTO sectionDTO = new SectionDTO(this.lineDTO, this.sourceDTO, this.sinkDTO, distance, time);
+        ShortCostRequest shortCostRequest = new ShortCostRequest(this.sourceDTO, this.sinkDTO);
+        this.sectionService.addNode(this.sourceDTO);
+        this.sectionService.addNode(this.sinkDTO);
+        this.sectionService.addSection(sectionDTO);
+        ShortCostResponse shortCostResponse = this.sectionService.computeShortDistance(shortCostRequest);
+        assertThat(shortCostResponse.getTotalDistance()).isEqualTo(distance);
+        assertThat(shortCostResponse.getTotalTime()).isEqualTo(time);
+        assertThat(shortCostResponse.getStationNameList()).containsExactly(this.sourceDTO.getName(),
+            this.sinkDTO.getName());
+    }
+
+    @Test
+    public void computeShortDistance__NotExistsSourceStationException() {
+        StationDTO otherDTO = new StationDTO("other");
+        ShortCostRequest shortCostRequest = new ShortCostRequest(otherDTO, this.sinkDTO);
+        String message = "존재하지 않은 시작 지점 역입니다.";
+        assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void computeShortDistance__NotExistsSinkStationException() {
+        StationDTO otherDTO = new StationDTO("other");
+        ShortCostRequest shortCostRequest = new ShortCostRequest(this.sourceDTO, otherDTO);
+        String message = "존재하지 않은 종료 지점 역입니다.";
+        assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void computeShortDistance__NotConnectedSourceAndSinkStationException() {
+        ShortCostRequest shortCostRequest = new ShortCostRequest(this.sourceDTO, this.sinkDTO);
+        String message = "시작 지점과 종료 지점 역이 연결되어 있지 않습니다.";
+        this.sectionService.addNode(this.sourceDTO);
+        this.sectionService.addNode(this.sinkDTO);
+        assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
     @AfterEach
     public void init() {
-        lineService.deleteAll();
-        stationService.deleteAll();
-        sectionService.deleteAll();
+        this.lineService.deleteAll();
+        this.stationService.deleteAll();
+        this.sectionService.deleteAll();
+        this.shortDistanceService.deleteAll();
     }
 }

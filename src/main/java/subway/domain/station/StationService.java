@@ -1,6 +1,7 @@
 package subway.domain.station;
 
 import java.util.List;
+import java.util.Optional;
 
 public class StationService {
     private static final String NOT_EXISTS_STATION_MESSAGE = "존재하지 않은 역입니다.";
@@ -9,6 +10,10 @@ public class StationService {
     public Station findOneByName(String name) {
         return StationRepository.findByName(name)
             .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_STATION_MESSAGE));
+    }
+
+    public Optional<Station> findByName(String name) {
+        return StationRepository.findByName(name);
     }
 
     public List<Station> findAll() {
