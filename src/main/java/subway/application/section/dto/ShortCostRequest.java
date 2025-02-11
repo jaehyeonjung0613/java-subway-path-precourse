@@ -3,8 +3,8 @@ package subway.application.section.dto;
 import subway.domain.station.StationDTO;
 
 public class ShortCostRequest {
-    private static final String SOURCE_STATION_INFO_ESSENTIAL_MESSAGE = "시작 지점 역 정보는 필수입니다.";
-    private static final String SINK_STATION_INFO_ESSENTIAL_MESSAGE = "종료 지점 역 정보는 필수입니다.";
+    private static final String SOURCE_STATION_INFO_ESSENTIAL_MESSAGE = "시작역 정보는 필수입니다.";
+    private static final String SINK_STATION_INFO_ESSENTIAL_MESSAGE = "종료역 정보는 필수입니다.";
     private static final String SAME_SOURCE_AND_SINK_STATION_MESSAGE = "출발역과 도착역이 동일합니다.";
 
     private final StationDTO sourceDTO;

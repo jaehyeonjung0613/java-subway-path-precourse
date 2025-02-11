@@ -5,8 +5,8 @@ import subway.domain.station.StationDTO;
 
 public class SectionDTO {
     private static final String SECTION_ADDING_LINE_INFO_ESSENTIAL_MESSAGE = "구간 생성시 노선 정보는 필수입니다.";
-    private static final String SECTION_ADDING_SOURCE_STATION_INFO_ESSENTIAL_MESSAGE = "구간 생성시 시작 지점 역 정보는 필수입니다.";
-    private static final String SECTION_ADDING_SINK_STATION_INFO_ESSENTIAL_MESSAGE = "구간 생성시 종료 지점 역 정보는 필수입니다.";
+    private static final String SECTION_ADDING_SOURCE_STATION_INFO_ESSENTIAL_MESSAGE = "구간 생성시 시작역 정보는 필수입니다.";
+    private static final String SECTION_ADDING_SINK_STATION_INFO_ESSENTIAL_MESSAGE = "구간 생성시 종료역 정보는 필수입니다.";
 
     private final LineDTO lineDTO;
     private final StationDTO sourceDTO;

@@ -46,7 +46,7 @@ public class ShortDistanceServiceTest {
     @Test
     public void addEdge_NotExistsSourceNodeException() {
         Section section = new Section(this.line, this.source, this.sink, 0, 0);
-        String message = "존재하지 않은 시작 지점 노드입니다.";
+        String message = "존재하지 않은 시작노드입니다.";
         this.shortDistanceService.addNode(this.sink);
         assertThatThrownBy(() -> this.shortDistanceService.addEdge(section)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
@@ -55,7 +55,7 @@ public class ShortDistanceServiceTest {
     @Test
     public void addEdge_NotExistsSinkNodeException() {
         Section section = new Section(this.line, this.source, this.sink, 0, 0);
-        String message = "존재하지 않은 종료 지점 노드입니다.";
+        String message = "존재하지 않은 종료노드입니다.";
         this.shortDistanceService.addNode(this.source);
         assertThatThrownBy(() -> this.shortDistanceService.addEdge(section)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
@@ -86,7 +86,7 @@ public class ShortDistanceServiceTest {
 
     @Test
     public void compute__NotExistsSourceNodeException() {
-        String message = "존재하지 않은 시작 지점 노드입니다.";
+        String message = "존재하지 않은 시작노드입니다.";
         this.shortDistanceService.addNode(this.sink);
         assertThatThrownBy(() -> this.shortDistanceService.compute(this.source, this.sink)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
@@ -94,7 +94,7 @@ public class ShortDistanceServiceTest {
 
     @Test
     public void compute__NotExistsSinkNodeException() {
-        String message = "존재하지 않은 종료 지점 노드입니다.";
+        String message = "존재하지 않은 종료노드입니다.";
         this.shortDistanceService.addNode(this.source);
         assertThatThrownBy(() -> this.shortDistanceService.compute(this.source, this.sink)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);

@@ -26,7 +26,7 @@ public class StationTest {
         Station other = new Station("other");
         Station sink = new Station("sink");
         Section section = new Section(line, other, sink, 0, 0);
-        String message = "구간 추가시 다른 시작 지점 역을 받았습니다.";
+        String message = "구간 추가시 다른 시작역을 받았습니다.";
         assertThatThrownBy(() -> source.addSection(section)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -46,7 +46,7 @@ public class StationTest {
     public void findDistanceTo__NotExistsPathToSinkStationException() {
         Station source = new Station("source");
         Station sink = new Station("sink");
-        String message = "종료 지점 역까지 경로가 존재하지 않습니다.";
+        String message = "종료역까지 경로가 존재하지 않습니다.";
         assertThatThrownBy(() -> source.findDistanceTo(sink)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -66,7 +66,7 @@ public class StationTest {
     public void findTimeTo__NotExistsPathToSinkStationException() {
         Station source = new Station("source");
         Station sink = new Station("sink");
-        String message = "종료 지점 역까지 경로가 존재하지 않습니다.";
+        String message = "종료역까지 경로가 존재하지 않습니다.";
         assertThatThrownBy(() -> source.findTimeTo(sink)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }

@@ -21,7 +21,7 @@ public class SectionDTOTest {
     public void constructor__SectionAddingSourceStationInfoEssentialException() {
         LineDTO lineDTO = new LineDTO("line");
         StationDTO sinkDTO = new StationDTO("sink");
-        String message = "구간 생성시 시작 지점 역 정보는 필수입니다.";
+        String message = "구간 생성시 시작역 정보는 필수입니다.";
         assertThatThrownBy(() -> new SectionDTO(lineDTO, null, sinkDTO)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -30,7 +30,7 @@ public class SectionDTOTest {
     public void constructor__SectionAddingSinkStationInfoEssentialException() {
         LineDTO lineDTO = new LineDTO("line");
         StationDTO sourceDTO = new StationDTO("source");
-        String message = "구간 생성시 종료 지점 역 정보는 필수입니다.";
+        String message = "구간 생성시 종료역 정보는 필수입니다.";
         assertThatThrownBy(() -> new SectionDTO(lineDTO, sourceDTO, null)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }

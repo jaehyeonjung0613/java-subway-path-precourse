@@ -82,7 +82,7 @@ public class SectionServiceTest {
     public void computeShortDistance__NotExistsSourceStationException() {
         StationDTO otherDTO = new StationDTO("other");
         ShortCostRequest shortCostRequest = new ShortCostRequest(otherDTO, this.sinkDTO);
-        String message = "존재하지 않은 시작 지점 역입니다.";
+        String message = "존재하지 않은 시작역입니다.";
         assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
     }
@@ -91,7 +91,7 @@ public class SectionServiceTest {
     public void computeShortDistance__NotExistsSinkStationException() {
         StationDTO otherDTO = new StationDTO("other");
         ShortCostRequest shortCostRequest = new ShortCostRequest(this.sourceDTO, otherDTO);
-        String message = "존재하지 않은 종료 지점 역입니다.";
+        String message = "존재하지 않은 종료역입니다.";
         assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
     }
@@ -99,7 +99,7 @@ public class SectionServiceTest {
     @Test
     public void computeShortDistance__NotConnectedSourceAndSinkStationException() {
         ShortCostRequest shortCostRequest = new ShortCostRequest(this.sourceDTO, this.sinkDTO);
-        String message = "시작 지점과 종료 지점 역이 연결되어 있지 않습니다.";
+        String message = "시작 지점과 종료역이 연결되어 있지 않습니다.";
         this.sectionService.addNode(this.sourceDTO);
         this.sectionService.addNode(this.sinkDTO);
         assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(

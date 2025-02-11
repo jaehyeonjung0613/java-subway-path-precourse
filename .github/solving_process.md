@@ -786,7 +786,7 @@ public class StationTest {
         Station other = new Station("other");
         Station sink = new Station("sink");
         Section section = new Section(line, other, sink, 0, 0);
-        String message = "구간 추가시 다른 시작 지점 역을 받았습니다.";
+        String message = "구간 추가시 다른 시작역을 받았습니다.";
         assertThatThrownBy(() -> source.addSection(section)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -805,7 +805,7 @@ import java.util.List;
 import subway.domain.section.Section;
 
 public class Station {
-    private static final String SECTION_ADDING_OTHER_SOURCE_STATION_RECEIVE_MESSAGE = "구간 추가시 다른 시작 지점 역을 받았습니다.";
+    private static final String SECTION_ADDING_OTHER_SOURCE_STATION_RECEIVE_MESSAGE = "구간 추가시 다른 시작역을 받았습니다.";
 
     private final List<Section> sectionList = new ArrayList<>();
 
@@ -856,7 +856,7 @@ public class SectionDTOTest {
     public void constructor__SectionAddingSourceStationInfoEssentialException() {
         LineDTO lineDTO = new LineDTO("line");
         StationDTO sinkDTO = new StationDTO("sink");
-        String message = "구간 생성시 시작 지점 역 정보는 필수입니다.";
+        String message = "구간 생성시 시작역 정보는 필수입니다.";
         assertThatThrownBy(() -> new SectionDTO(lineDTO, null, sinkDTO)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -865,7 +865,7 @@ public class SectionDTOTest {
     public void constructor__SectionAddingSinkStationInfoEssentialException() {
         LineDTO lineDTO = new LineDTO("line");
         StationDTO sourceDTO = new StationDTO("source");
-        String message = "구간 생성시 종료 지점 역 정보는 필수입니다.";
+        String message = "구간 생성시 종료역 정보는 필수입니다.";
         assertThatThrownBy(() -> new SectionDTO(lineDTO, sourceDTO, null)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -882,8 +882,8 @@ import subway.domain.station.StationDTO;
 
 public class SectionDTO {
     private static final String SECTION_ADDING_LINE_INFO_ESSENTIAL_MESSAGE = "구간 생성시 노선 정보는 필수입니다.";
-    private static final String SECTION_ADDING_SOURCE_STATION_INFO_ESSENTIAL_MESSAGE = "구간 생성시 시작 지점 역 정보는 필수입니다.";
-    private static final String SECTION_ADDING_SINK_STATION_INFO_ESSENTIAL_MESSAGE = "구간 생성시 종료 지점 역 정보는 필수입니다.";
+    private static final String SECTION_ADDING_SOURCE_STATION_INFO_ESSENTIAL_MESSAGE = "구간 생성시 시작역 정보는 필수입니다.";
+    private static final String SECTION_ADDING_SINK_STATION_INFO_ESSENTIAL_MESSAGE = "구간 생성시 종료역 정보는 필수입니다.";
 
     private final LineDTO lineDTO;
     private final StationDTO sourceDTO;
@@ -1050,7 +1050,7 @@ public class SectionRepository {
 
 구간 데이터 추가 기능 구현.
 
-구간 중복 생성 방지를 위해 노선, 시작 지점 역, 종료 지점 역 기준으로 존재 여부 확인 기능 구현.
+구간 중복 생성 방지를 위해 노선, 시작역, 종료역 기준으로 존재 여부 확인 기능 구현.
 
 ```java
 // SectionServiceTest.java
@@ -1499,7 +1499,7 @@ class shortDistanceServiceTest {
     @Test
     public void addEdge_NotExistsSourceNodeException() {
         Section section = new Section(this.line, this.source, this.sink, 0, 0);
-        String message = "존재하지 않은 시작 지점 노드입니다.";
+        String message = "존재하지 않은 시작노드입니다.";
         this.shortDistanceService.addNode(this.sink);
         assertThatThrownBy(() -> this.shortDistanceService.addEdge(section)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
@@ -1508,7 +1508,7 @@ class shortDistanceServiceTest {
     @Test
     public void addEdge_NotExistsSinkNodeException() {
         Section section = new Section(this.line, this.source, this.sink, 0, 0);
-        String message = "존재하지 않은 종료 지점 노드입니다.";
+        String message = "존재하지 않은 종료노드입니다.";
         this.shortDistanceService.addNode(this.source);
         assertThatThrownBy(() -> this.shortDistanceService.addEdge(section)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
@@ -1548,8 +1548,8 @@ import subway.domain.section.Section;
 import subway.domain.station.Station;
 
 class shortDistanceService {
-    private static final String NOT_EXISTS_SOURCE_NODE_MESSAGE = "존재하지 않은 시작 지점 노드입니다.";
-    private static final String NOT_EXISTS_SINK_NODE_MESSAGE = "존재하지 않은 종료 지점 노드입니다.";
+    private static final String NOT_EXISTS_SOURCE_NODE_MESSAGE = "존재하지 않은 시작노드입니다.";
+    private static final String NOT_EXISTS_SINK_NODE_MESSAGE = "존재하지 않은 종료노드입니다.";
     private static final String ALREADY_EXISTS_EDGE_MESSAGE = "이미 등록되어있는 간선입니다.";
 
     protected void addEdge(Section section) {
@@ -1635,7 +1635,7 @@ import subway.domain.station.Station;
 class shortDistanceServiceTest {
     @Test
     public void compute__NotExistsSourceNodeException() {
-        String message = "존재하지 않은 시작 지점 노드입니다.";
+        String message = "존재하지 않은 시작노드입니다.";
         this.shortDistanceService.addNode(this.sink);
         assertThatThrownBy(() -> this.shortDistanceService.compute(this.source, this.sink)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
@@ -1643,7 +1643,7 @@ class shortDistanceServiceTest {
 
     @Test
     public void compute__NotExistsSinkNodeException() {
-        String message = "존재하지 않은 종료 지점 노드입니다.";
+        String message = "존재하지 않은 종료노드입니다.";
         this.shortDistanceService.addNode(this.source);
         assertThatThrownBy(() -> this.shortDistanceService.compute(this.source, this.sink)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
@@ -1695,7 +1695,7 @@ public class ShortCostRequestTest {
     @Test
     public void constructor__SourceStationInfoEssentialException() {
         StationDTO sinkDTO = new StationDTO("sink");
-        String message = "시작 지점 역 정보는 필수입니다.";
+        String message = "시작역 정보는 필수입니다.";
         assertThatThrownBy(() -> new ShortCostRequest(null, sinkDTO)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -1703,7 +1703,7 @@ public class ShortCostRequestTest {
     @Test
     public void constructor__SinkStationInfoEssentialException() {
         StationDTO sourceDTO = new StationDTO("source");
-        String message = "종료 지점 역 정보는 필수입니다.";
+        String message = "종료역 정보는 필수입니다.";
         assertThatThrownBy(() -> new ShortCostRequest(sourceDTO, null)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -1749,8 +1749,8 @@ package subway.application.section.dto;
 import subway.domain.station.StationDTO;
 
 public class ShortCostRequest {
-    private static final String SOURCE_STATION_INFO_ESSENTIAL_MESSAGE = "시작 지점 역 정보는 필수입니다.";
-    private static final String SINK_STATION_INFO_ESSENTIAL_MESSAGE = "종료 지점 역 정보는 필수입니다.";
+    private static final String SOURCE_STATION_INFO_ESSENTIAL_MESSAGE = "시작역 정보는 필수입니다.";
+    private static final String SINK_STATION_INFO_ESSENTIAL_MESSAGE = "종료역 정보는 필수입니다.";
     private static final String SAME_SOURCE_AND_SINK_STATION_MESSAGE = "출발역과 도착역이 동일합니다.";
 
     private final StationDTO sourceDTO;
@@ -1849,7 +1849,7 @@ public class StationTest {
     public void findDistanceTo__NotExistsPathToSinkStationException() {
         Station source = new Station("source");
         Station sink = new Station("sink");
-        String message = "종료 지점 역까지 경로가 존재하지 않습니다.";
+        String message = "종료역까지 경로가 존재하지 않습니다.";
         assertThatThrownBy(() -> source.findDistanceTo(sink)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -1869,7 +1869,7 @@ public class StationTest {
     public void findTimeTo__NotExistsPathToSinkStationException() {
         Station source = new Station("source");
         Station sink = new Station("sink");
-        String message = "종료 지점 역까지 경로가 존재하지 않습니다.";
+        String message = "종료역까지 경로가 존재하지 않습니다.";
         assertThatThrownBy(() -> source.findTimeTo(sink)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -1888,7 +1888,7 @@ import java.util.List;
 import subway.domain.section.Section;
 
 public class Station {
-    private static final String NOT_EXISTS_PATH_TO_SINK_STATION_MESSAGE = "종료 지점 역까지 경로가 존재하지 않습니다.";
+    private static final String NOT_EXISTS_PATH_TO_SINK_STATION_MESSAGE = "종료역까지 경로가 존재하지 않습니다.";
 
     public int findDistanceTo(Station sink) {
         return this.sectionList.stream()
@@ -2007,7 +2007,7 @@ public class SectionServiceTest {
     public void computeShortDistance__NotExistsSourceStationException() {
         StationDTO otherDTO = new StationDTO("other");
         ShortCostRequest shortCostRequest = new ShortCostRequest(otherDTO, this.sinkDTO);
-        String message = "존재하지 않은 시작 지점 역입니다.";
+        String message = "존재하지 않은 시작역입니다.";
         assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
     }
@@ -2016,7 +2016,7 @@ public class SectionServiceTest {
     public void computeShortDistance__NotExistsSinkStationException() {
         StationDTO otherDTO = new StationDTO("other");
         ShortCostRequest shortCostRequest = new ShortCostRequest(this.sourceDTO, otherDTO);
-        String message = "존재하지 않은 종료 지점 역입니다.";
+        String message = "존재하지 않은 종료역입니다.";
         assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
             IllegalArgumentException.class).hasMessage(message);
     }
@@ -2024,7 +2024,7 @@ public class SectionServiceTest {
     @Test
     public void computeShortDistance__NotConnectedSourceAndSinkStationException() {
         ShortCostRequest shortCostRequest = new ShortCostRequest(this.sourceDTO, this.sinkDTO);
-        String message = "시작 지점과 종료 지점 역이 연결되어 있지 않습니다.";
+        String message = "시작 지점과 종료역이 연결되어 있지 않습니다.";
         this.sectionService.addNode(this.sourceDTO);
         this.sectionService.addNode(this.sinkDTO);
         assertThatThrownBy(() -> this.sectionService.computeShortDistance(shortCostRequest)).isInstanceOf(
@@ -2078,9 +2078,9 @@ import subway.domain.station.StationDTO;
 import subway.domain.station.StationService;
 
 public class SectionService {
-    private static final String NOT_EXISTS_SOURCE_STATION_MESSAGE = "존재하지 않은 시작 지점 역입니다.";
-    private static final String NOT_EXISTS_SINK_STATION_MESSAGE = "존재하지 않은 종료 지점 역입니다.";
-    private static final String NOT_CONNECTED_SOURCE_AND_SINK_STATION_MESSAGE = "시작 지점과 종료 지점 역이 연결되어 있지 않습니다.";
+    private static final String NOT_EXISTS_SOURCE_STATION_MESSAGE = "존재하지 않은 시작역입니다.";
+    private static final String NOT_EXISTS_SINK_STATION_MESSAGE = "존재하지 않은 종료역입니다.";
+    private static final String NOT_CONNECTED_SOURCE_AND_SINK_STATION_MESSAGE = "시작 지점과 종료역이 연결되어 있지 않습니다.";
 
     public ShortCostResponse computeShortDistance(ShortCostRequest shortCostRequest) {
         Station source = this.stationService.findByName(shortCostRequest.getSourceDTO().getName())
@@ -2150,8 +2150,8 @@ abstract class ShortCostService {
     }
 
     private static final String ALREADY_EXISTS_NODE_MESSAGE = "이미 등록되어있는 노드입니다.";
-    private static final String NOT_EXISTS_SOURCE_NODE_MESSAGE = "존재하지 않은 시작 지점 노드입니다.";
-    private static final String NOT_EXISTS_SINK_NODE_MESSAGE = "존재하지 않은 종료 지점 노드입니다.";
+    private static final String NOT_EXISTS_SOURCE_NODE_MESSAGE = "존재하지 않은 시작노드입니다.";
+    private static final String NOT_EXISTS_SINK_NODE_MESSAGE = "존재하지 않은 종료노드입니다.";
     private static final String ALREADY_EXISTS_EDGE_MESSAGE = "이미 등록되어있는 간선입니다.";
 
     protected Set<Station> findAllNode() {

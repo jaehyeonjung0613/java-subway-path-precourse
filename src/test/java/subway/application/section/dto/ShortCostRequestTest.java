@@ -10,7 +10,7 @@ public class ShortCostRequestTest {
     @Test
     public void constructor__SourceStationInfoEssentialException() {
         StationDTO sinkDTO = new StationDTO("sink");
-        String message = "시작 지점 역 정보는 필수입니다.";
+        String message = "시작역 정보는 필수입니다.";
         assertThatThrownBy(() -> new ShortCostRequest(null, sinkDTO)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }
@@ -18,7 +18,7 @@ public class ShortCostRequestTest {
     @Test
     public void constructor__SinkStationInfoEssentialException() {
         StationDTO sourceDTO = new StationDTO("source");
-        String message = "종료 지점 역 정보는 필수입니다.";
+        String message = "종료역 정보는 필수입니다.";
         assertThatThrownBy(() -> new ShortCostRequest(sourceDTO, null)).isInstanceOf(IllegalArgumentException.class)
             .hasMessage(message);
     }

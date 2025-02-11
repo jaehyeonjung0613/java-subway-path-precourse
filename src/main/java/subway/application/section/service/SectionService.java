@@ -18,9 +18,9 @@ import subway.domain.station.StationService;
 
 public class SectionService {
     private static final String ALREADY_EXISTS_SECTION_MESSAGE = "이미 등록되어있는 구간입니다.";
-    private static final String NOT_EXISTS_SOURCE_STATION_MESSAGE = "존재하지 않은 시작 지점 역입니다.";
-    private static final String NOT_EXISTS_SINK_STATION_MESSAGE = "존재하지 않은 종료 지점 역입니다.";
-    private static final String NOT_CONNECTED_SOURCE_AND_SINK_STATION_MESSAGE = "시작 지점과 종료 지점 역이 연결되어 있지 않습니다.";
+    private static final String NOT_EXISTS_SOURCE_STATION_MESSAGE = "존재하지 않은 시작역입니다.";
+    private static final String NOT_EXISTS_SINK_STATION_MESSAGE = "존재하지 않은 종료역입니다.";
+    private static final String NOT_CONNECTED_SOURCE_AND_SINK_STATION_MESSAGE = "시작 지점과 종료역이 연결되어 있지 않습니다.";
 
     private final LineService lineService = new LineService();
     private final StationService stationService = new StationService();

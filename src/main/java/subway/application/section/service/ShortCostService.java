@@ -20,8 +20,8 @@ abstract class ShortCostService {
     }
 
     private static final String ALREADY_EXISTS_NODE_MESSAGE = "이미 등록되어있는 노드입니다.";
-    private static final String NOT_EXISTS_SOURCE_NODE_MESSAGE = "존재하지 않은 시작 지점 노드입니다.";
-    private static final String NOT_EXISTS_SINK_NODE_MESSAGE = "존재하지 않은 종료 지점 노드입니다.";
+    private static final String NOT_EXISTS_SOURCE_NODE_MESSAGE = "존재하지 않은 시작노드입니다.";
+    private static final String NOT_EXISTS_SINK_NODE_MESSAGE = "존재하지 않은 종료노드입니다.";
     private static final String ALREADY_EXISTS_EDGE_MESSAGE = "이미 등록되어있는 간선입니다.";
 
     protected Set<Station> findAllNode() {

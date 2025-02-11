@@ -7,8 +7,8 @@ import java.util.List;
 import subway.domain.section.Section;
 
 public class Station {
-    private static final String SECTION_ADDING_OTHER_SOURCE_STATION_RECEIVE_MESSAGE = "구간 추가시 다른 시작 지점 역을 받았습니다.";
-    private static final String NOT_EXISTS_PATH_TO_SINK_STATION_MESSAGE = "종료 지점 역까지 경로가 존재하지 않습니다.";
+    private static final String SECTION_ADDING_OTHER_SOURCE_STATION_RECEIVE_MESSAGE = "구간 추가시 다른 시작역을 받았습니다.";
+    private static final String NOT_EXISTS_PATH_TO_SINK_STATION_MESSAGE = "종료역까지 경로가 존재하지 않습니다.";
 
     private final String name;
     private final List<Section> sectionList = new ArrayList<>();
