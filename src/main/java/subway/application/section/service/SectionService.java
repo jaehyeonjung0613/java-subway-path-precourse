@@ -8,6 +8,7 @@ import subway.domain.line.LineService;
 import subway.domain.section.Section;
 import subway.domain.section.SectionRepository;
 import subway.domain.station.Station;
+import subway.domain.station.StationDTO;
 import subway.domain.station.StationService;
 
 public class SectionService {
@@ -15,9 +16,15 @@ public class SectionService {
 
     private final LineService lineService = new LineService();
     private final StationService stationService = new StationService();
+    private final ShortDistanceService shortDistanceService = new ShortDistanceService();
 
     public List<Section> findAll() {
         return SectionRepository.sections();
+    }
+
+    public void addNode(StationDTO stationDTO) {
+        Station station = this.stationService.findOneByName(stationDTO.getName());
+        this.shortDistanceService.addNode(station);
     }
 
     public void addSection(SectionDTO sectionDTO) {
@@ -29,6 +36,7 @@ public class SectionService {
             throw new IllegalArgumentException(ALREADY_EXISTS_SECTION_MESSAGE);
         }
         SectionRepository.addSection(section);
+        shortDistanceService.addEdge(section);
         line.addSection(section);
         source.addSection(section);
     }
