@@ -2242,3 +2242,151 @@ class ShortDistanceService extends ShortCostService {
 ```
 
 이후에 구현될 최소 시간 경로와 그래프 관련 기능은 유사하기 때문에 따로 추상 공통 함수를 생성하여 코드 중복 줄임.
+
+## 7. 최소 시간 경로 구하기
+
+```java
+// ShortTimeService.java
+
+package subway.application.section.service;
+
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
+
+import subway.domain.section.Section;
+
+class ShortTimeService extends ShortCostService {
+    public ShortTimeService() {
+        super(new DirectedWeightedMultigraph<>(
+            DefaultWeightedEdge.class));
+    }
+
+    @Override
+    protected double getWeight(Section section) {
+        return section.getTime();
+    }
+}
+```
+
+최소 시간 경로 반환 기능 구현.
+
+```java
+// SectionService.java
+
+package subway.application.section.service;
+
+import java.util.List;
+
+import org.jgrapht.GraphPath;
+import org.jgrapht.graph.DefaultWeightedEdge;
+
+import subway.application.section.dto.SectionDTO;
+import subway.application.section.dto.ShortCostRequest;
+import subway.application.section.dto.ShortCostResponse;
+import subway.domain.line.Line;
+import subway.domain.line.LineService;
+import subway.domain.section.Section;
+import subway.domain.section.SectionRepository;
+import subway.domain.station.Station;
+import subway.domain.station.StationDTO;
+import subway.domain.station.StationService;
+
+public class SectionService {
+    private final ShortTimeService shortTimeService = new ShortTimeService();
+
+    public void addNode(StationDTO stationDTO) {
+        Station station = this.stationService.findOneByName(stationDTO.getName());
+        this.shortDistanceService.addNode(station);
++       this.shortTimeService.addNode(station);
+    }
+
+    public void addSection(SectionDTO sectionDTO) {
+        Line line = this.lineService.findOneByName(sectionDTO.getLineDTO().getName());
+        Station source = this.stationService.findOneByName(sectionDTO.getSourceDTO().getName());
+        Station sink = this.stationService.findOneByName(sectionDTO.getSinkDTO().getName());
+        Section section = new Section(line, source, sink, sectionDTO.getDistance(), sectionDTO.getTime());
+        if (SectionRepository.exists(section)) {
+            throw new IllegalArgumentException(ALREADY_EXISTS_SECTION_MESSAGE);
+        }
+        SectionRepository.addSection(section);
+        this.shortDistanceService.addEdge(section);
++       this.shortTimeService.addEdge(section);
+        line.addSection(section);
+        source.addSection(section);
+    }
+    
+    public ShortCostResponse computeShortTime(ShortCostRequest shortCostRequest) {
+        Station source = this.stationService.findByName(shortCostRequest.getSourceDTO().getName())
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_SOURCE_STATION_MESSAGE));
+        Station sink = this.stationService.findByName(shortCostRequest.getSinkDTO().getName())
+            .orElseThrow(() -> new IllegalArgumentException(NOT_EXISTS_SINK_STATION_MESSAGE));
+        GraphPath<Station, DefaultWeightedEdge> graphPath = this.shortDistanceService.compute(source, sink);
+        if (graphPath == null) {
+            throw new IllegalArgumentException(NOT_CONNECTED_SOURCE_AND_SINK_STATION_MESSAGE);
+        }
+        return new ShortCostResponse(graphPath.getVertexList());
+    }
+}
+```
+
+최소 시간 그래프도 같이 노드, 간선 추가에 포함.
+
+최소 시간 계산 구현.
+
+```java
+// SectionServiceTest.java
+
+package subway.application.section.service;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import subway.application.section.dto.SectionDTO;
+import subway.application.section.dto.ShortCostRequest;
+import subway.application.section.dto.ShortCostResponse;
+import subway.domain.line.Line;
+import subway.domain.line.LineDTO;
+import subway.domain.line.LineService;
+import subway.domain.station.Station;
+import subway.domain.station.StationDTO;
+import subway.domain.station.StationService;
+
+public class SectionServiceTest {
+    private final ShortTimeService shortTimeService = new ShortTimeService();
+
+    @AfterEach
+    public void init() {
+        this.lineService.deleteAll();
+        this.stationService.deleteAll();
+        this.sectionService.deleteAll();
+        this.shortDistanceService.deleteAll();
++       this.shortTimeService.deleteAll();
+    }
+}
+```
+
+최소 시간 기능 도입으로 인한 테스트 초기화 소스 변경.
+
+```java
+// StationController.java
+
+package subway.presentation;
+
+import subway.application.section.service.SectionService;import subway.domain.station.StationDTO;
+import subway.domain.station.StationService;
+
+public class StationController {
+    private final SectionService sectionService = new SectionService();
+
+    public void addStation(String name) {
+        StationDTO stationDTO = new StationDTO(name);
+        stationService.addStation(stationDTO);
++       this.sectionService.addNode(stationDTO);
+    }
+}
+```
+
+역과 같이 노드도 같이 추가되도록 변경.
