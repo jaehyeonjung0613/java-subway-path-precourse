@@ -2379,6 +2379,31 @@ public class SectionServiceTest {
 최소 시간 기능 도입으로 인한 테스트 초기화 소스 변경.
 
 ```java
+// SectionController.java
+
+package subway.presentation;
+
+import subway.application.section.dto.SectionDTO;
+import subway.application.section.dto.ShortCostRequest;
+import subway.application.section.dto.ShortCostResponse;
+import subway.application.section.service.SectionService;
+import subway.domain.line.LineDTO;
+import subway.domain.station.StationDTO;
+import subway.util.Validation;
+
+public class SectionController {
+    public ShortCostResponse computeShortTime(String sourceName, String sinkName) {
+        StationDTO sourceDTO = new StationDTO(sourceName);
+        StationDTO sinkDTO = new StationDTO(sinkName);
+        ShortCostRequest shortCostRequest = new ShortCostRequest(sourceDTO, sinkDTO);
+        return this.sectionService.computeShortTime(shortCostRequest);
+    }
+}
+```
+
+제어 계층에 최소 시간 계산 기능 매핑.
+
+```java
 // StationController.java
 
 package subway.presentation;

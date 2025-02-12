@@ -52,4 +52,11 @@ public class SectionController {
         ShortCostRequest shortCostRequest = new ShortCostRequest(sourceDTO, sinkDTO);
         return this.sectionService.computeShortDistance(shortCostRequest);
     }
+
+    public ShortCostResponse computeShortTime(String sourceName, String sinkName) {
+        StationDTO sourceDTO = new StationDTO(sourceName);
+        StationDTO sinkDTO = new StationDTO(sinkName);
+        ShortCostRequest shortCostRequest = new ShortCostRequest(sourceDTO, sinkDTO);
+        return this.sectionService.computeShortTime(shortCostRequest);
+    }
 }
