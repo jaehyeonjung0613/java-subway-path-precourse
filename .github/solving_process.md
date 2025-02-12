@@ -2113,10 +2113,14 @@ import subway.util.Validation;
 
 public class SectionController {
     public ShortCostResponse computeShortDistance(String sourceName, String sinkName) {
+        ShortCostRequest shortCostRequest = this.createShortCostRequest(sourceName, sinkName);
+        return this.sectionService.computeShortDistance(shortCostRequest);
+    }
+
+    private ShortCostRequest createShortCostRequest(String sourceName, String sinkName) {
         StationDTO sourceDTO = new StationDTO(sourceName);
         StationDTO sinkDTO = new StationDTO(sinkName);
-        ShortCostRequest shortCostRequest = new ShortCostRequest(sourceDTO, sinkDTO);
-        return this.sectionService.computeShortDistance(shortCostRequest);
+        return new ShortCostRequest(sourceDTO, sinkDTO);
     }
 }
 ```
@@ -2393,9 +2397,7 @@ import subway.util.Validation;
 
 public class SectionController {
     public ShortCostResponse computeShortTime(String sourceName, String sinkName) {
-        StationDTO sourceDTO = new StationDTO(sourceName);
-        StationDTO sinkDTO = new StationDTO(sinkName);
-        ShortCostRequest shortCostRequest = new ShortCostRequest(sourceDTO, sinkDTO);
+        ShortCostRequest shortCostRequest = this.createShortCostRequest(sourceName, sinkName);
         return this.sectionService.computeShortTime(shortCostRequest);
     }
 }
