@@ -2926,3 +2926,173 @@ public abstract class MenuView implements View {
 ```
 
 메뉴 화면 공통 기능 구현.
+
+## 9. 경로 기준(화면) 구현
+
+```java
+// PathMenu.java
+
+package subway.screen.view.path;
+
+import subway.screen.view.Menu;
+
+public enum PathMenu implements Menu {
+    SHORT_DISTANCE("1", "최단 거리"),
+    SHORT_TIME("2", "최소 시간"),
+    BACK("B", "돌아가기");
+
+    private final String command;
+    private final String name;
+
+    PathMenu(String command, String name) {
+        this.command = command;
+        this.name = name;
+    }
+
+    @Override
+    public String getCommand() {
+        return this.command;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
+}
+```
+
+```java
+// MainMenuView
+
+package subway.screen.view.path;
+
+import subway.screen.view.Menu;
+import subway.screen.view.MenuView;
+
+public class PathMenuView extends MenuView {
+    public PathMenuView() {
+        super();
+    }
+
+    @Override
+    public String title() {
+        return "경로 기준";
+    }
+
+    @Override
+    protected Class<? extends Menu> getType() {
+        return PathMenu.class;
+    }
+}
+```
+
+경로 기준(화면) 구성.
+
+```java
+// ViewController.java
+
+package subway.presentation;
+
+public interface ViewController {
+    void execute();
+}
+```
+
+화면 제어 기본 정의.
+
+```java
+// PathViewController.java
+
+package subway.presentation;
+
+import subway.application.section.dto.ShortCostResponse;
+import subway.screen.ui.Console;
+import subway.screen.view.Menu;
+import subway.screen.view.path.PathMenuView;
+
+public class PathViewController implements ViewController {
+    private final PathMenuView pathMenuView = new PathMenuView(this);
+    private final SectionController sectionController = new SectionController();
+
+    @Override
+    public void execute() {
+        do {
+            pathMenuView.show();
+            Menu menu = pathMenuView.question();
+            try {
+                pathMenuView.onEvent(menu);
+                return;
+            } catch (IllegalArgumentException e) {
+                Console.printError(e.getMessage());
+                Console.println();
+            }
+        } while (true);
+    }
+
+    public void handleShortDistance() {
+        String sourceName = this.requestSourceName();
+        String sinkName = this.requestSinkName();
+        ShortCostResponse shortCostResponse = this.sectionController.computeShortDistance(sourceName, sinkName);
+        this.printShortCostResponse(shortCostResponse);
+    }
+
+    public void handleShortTime() {
+        String sourceName = this.requestSourceName();
+        String sinkName = this.requestSinkName();
+        ShortCostResponse shortCostResponse = this.sectionController.computeShortTime(sourceName, sinkName);
+        this.printShortCostResponse(shortCostResponse);
+    }
+
+    private String requestSourceName() {
+        Console.printHeader("출발역을 입력하세요");
+        String sourceName = Console.readline();
+        Console.println();
+        return sourceName;
+    }
+
+    private String requestSinkName() {
+        Console.printHeader("도착역을 입력하세요");
+        String sinkName = Console.readline();
+        Console.println();
+        return sinkName;
+    }
+
+    private void printShortCostResponse(ShortCostResponse shortCostResponse) {
+        Console.printHeader("조회 결과");
+        Console.printInfo("---");
+        Console.printInfo(String.format("총 거리 : %dkm", shortCostResponse.getTotalDistance()));
+        Console.printInfo(String.format("총 소요 시간 : %d분", shortCostResponse.getTotalTime()));
+        Console.printInfo("---");
+        for (String stationName : shortCostResponse.getStationNameList()) {
+            Console.printInfo(stationName);
+        }
+        Console.println();
+    }
+}
+```
+
+경로 기준(화면) 제어 구현.
+
+메뉴 선택 이벤트 처리 구현.
+
+```java
+// MainMenuView
+
+package subway.screen.view.path;
+
+import subway.presentation.PathViewController;
+import subway.screen.view.Menu;
+import subway.screen.view.MenuEventManager;
+import subway.screen.view.MenuView;
+
+public class PathMenuView extends MenuView {
+    public PathMenuView(PathViewController pathViewController) {
+        super(MenuEventManager.builder()
+            .addEventListener(PathMenu.SHORT_DISTANCE, pathViewController::handleShortDistance)
+            .addEventListener(PathMenu.SHORT_TIME, pathViewController::handleShortTime)
+            .addEventListener(PathMenu.BACK));
+    }
+}
+```
+
+이벤트 처리 매핑.
