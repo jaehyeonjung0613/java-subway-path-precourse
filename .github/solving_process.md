@@ -2425,3 +2425,504 @@ public class StationController {
 ```
 
 역과 같이 노드도 같이 추가되도록 변경.
+
+## 8. Screen Layer Skeleton
+
+### Ui
+
+```java
+// Console.java
+
+package subway.screen.ui;
+
+import java.io.PrintStream;
+import java.util.Scanner;
+
+public final class Console {
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final PrintStream printer = System.out;
+
+    private static final String HEADER_OUTPUT_FORMAT = "## %s";
+    private static final String INFO_OUTPUT_FORMAT = "[INFO] %s";
+    private static final String ERROR_OUTPUT_FORMAT = "[ERROR] %s";
+
+    public static String readline() {
+        return scanner.nextLine();
+    }
+
+    public static void println() {
+        printer.println();
+    }
+
+    public static void println(String message) {
+        printer.println(message);
+    }
+
+    public static void printHeader(String message) {
+        println(String.format(HEADER_OUTPUT_FORMAT, message));
+    }
+
+    public static void printInfo(String message) {
+        println(String.format(INFO_OUTPUT_FORMAT, message));
+    }
+
+    public static void printError(String message) {
+        println(String.format(ERROR_OUTPUT_FORMAT, message));
+    }
+
+}
+```
+
+콘솔 입출력 기능 구현.
+
+### View
+
+```java
+// View.java
+
+package subway.screen.view;
+
+public interface View {
+    String title();
+    void show();
+}
+```
+
+화면 기본 기능 정의.
+
+```java
+// MenuTest.java
+
+package subway.screen.view;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class MenuTest {
+    private static class ClassMenu implements Menu {
+        @Override
+        public String getCommand() {
+            return "";
+        }
+
+        @Override
+        public String getName() {
+            return "";
+        }
+    }
+
+    private enum EnumMenu implements Menu {
+        ITEM("command", "name");
+
+        private final String command;
+        private final String name;
+
+        EnumMenu(String command, String name) {
+            this.command = command;
+            this.name = name;
+        }
+
+        @Override
+        public String getCommand() {
+            return this.command;
+        }
+
+        @Override
+        public String getName() {
+            return this.name;
+        }
+    }
+
+    @Test
+    public void findAll() {
+        EnumMenu[] enumMenus = EnumMenu.values();
+        assertThat(Menu.findAll(EnumMenu.class)).containsExactly(enumMenus);
+    }
+
+    @Test
+    public void findAll__NotEnumTypeClassException() {
+        String message = "Enum 형식의 클래스가 아닙니다.";
+        assertThatThrownBy(() -> Menu.findAll(ClassMenu.class)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+
+    @Test
+    public void findByCommand() {
+        EnumMenu item = EnumMenu.ITEM;
+        assertThat(Menu.findByCommand(EnumMenu.class, "none")).isNotPresent();
+        assertThat(Menu.findByCommand(EnumMenu.class, item.getCommand())).isPresent();
+    }
+}
+```
+
+```java
+// Menu.java
+
+package subway.screen.view;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+public interface Menu {
+    String getCommand();
+
+    String getName();
+
+    static List<Menu> findAll(Class<? extends Menu> menuClass) {
+        Menu[] enumValues = menuClass.getEnumConstants();
+        if(enumValues == null) {
+            throw new IllegalArgumentException("Enum 형식의 클래스가 아닙니다.");
+        }
+        return Arrays.stream(enumValues).collect(Collectors.toList());
+    }
+
+    static Optional<Menu> findByCommand(Class<? extends Menu> menuClass, String command) {
+        List<Menu> menuList = findAll(menuClass);
+        for (Menu menu : menuList) {
+            if (menu.getCommand().equals(command)) {
+                return Optional.of(menu);
+            }
+        }
+        return Optional.empty();
+    }
+}
+```
+
+메뉴 기본 기능 정의.
+
+메뉴 목록 조회 기능 구현.
+
+명령어 기준 단건 조회 기능 구현.
+
+```java
+// MenuEventManagerTest.java
+
+package subway.screen.view;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class MenuEventManagerTest {
+    private enum EnumMenu implements Menu {
+        ITEM("command", "name"), NONE("", "");
+
+        private final String command;
+        private final String name;
+
+        EnumMenu(String command, String name) {
+            this.command = command;
+            this.name = name;
+        }
+
+        @Override
+        public String getCommand() {
+            return this.command;
+        }
+
+        @Override
+        public String getName() {
+            return this.name;
+        }
+    }
+
+    @Test
+    public void addEventListener__NotReceivedMenuException() {
+        MenuEventManager menuEventManager = MenuEventManager.builder();
+        String message = "메뉴를 전달받지 못하였습니다.";
+        assertThatThrownBy(() -> menuEventManager.addEventListener(null, () -> {
+        })).isInstanceOf(IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void addEventListener__NotReceivedHandlerException() {
+        MenuEventManager menuEventManager = MenuEventManager.builder();
+        String message = "이벤트 핸들러를 전달받지 못하였습니다.";
+        assertThatThrownBy(() -> menuEventManager.addEventListener(EnumMenu.ITEM, null)).isInstanceOf(
+            IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void select() {
+        MenuEventManager menuEventManager = MenuEventManager.builder().addEventListener(EnumMenu.ITEM, () -> {
+        });
+        assertThat(menuEventManager.select(EnumMenu.NONE)).isNotPresent();
+        assertThat(menuEventManager.select(EnumMenu.ITEM)).isPresent();
+    }
+}
+```
+
+```java
+// MenuEventManager.java
+
+package subway.screen.view;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+public final class MenuEventManager {
+    private static final String NOT_RECEIVED_MENU_MESSAGE = "메뉴를 전달받지 못하였습니다.";
+    private static final String NOT_RECEIVED_HANDLER_MESSAGE = "이벤트 핸들러를 전달받지 못하였습니다.";
+
+    private final Map<Menu, Runnable> handlerMap = new HashMap<>();
+
+    private MenuEventManager() {
+    }
+
+    public static MenuEventManager builder() {
+        return new MenuEventManager();
+    }
+
+    public MenuEventManager addEventListener(Menu menu) {
+        return this.addEventListener(menu, () -> {
+        });
+    }
+
+    public MenuEventManager addEventListener(Menu menu, Runnable handler) {
+        this.validate(menu, handler);
+        this.handlerMap.put(menu, handler);
+        return this;
+    }
+
+    private void validate(Menu menu, Runnable runnable) {
+        if (menu == null) {
+            throw new IllegalArgumentException(NOT_RECEIVED_MENU_MESSAGE);
+        }
+        if (runnable == null) {
+            throw new IllegalArgumentException(NOT_RECEIVED_HANDLER_MESSAGE);
+        }
+    }
+
+    public void removeEventListener(Menu menu) {
+        this.handlerMap.remove(menu);
+    }
+
+    public void removeAllEventListener() {
+        this.handlerMap.clear();
+    }
+
+    Optional<Runnable> select(Menu menu) {
+        return Optional.ofNullable(this.handlerMap.get(menu));
+    }
+}
+```
+
+메뉴 이벤트 등록 및 삭제할 수 있는 기능 구현.
+
+```java
+// MenuViewTest.java
+
+package subway.screen.view;
+
+import static org.assertj.core.api.Assertions.*;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
+import subway.screen.ui.Console;
+
+public class MenuViewTest {
+    private MockedStatic<Console> mockConsole;
+
+    private enum TestMenu implements Menu {
+        ITEM("command", "name");
+
+        private final String command;
+        private final String name;
+
+        TestMenu(String command, String name) {
+            this.command = command;
+            this.name = name;
+        }
+
+        @Override
+        public String getCommand() {
+            return this.command;
+        }
+
+        @Override
+        public String getName() {
+            return this.name;
+        }
+    }
+
+    private static class TestMenuView extends MenuView {
+        public TestMenuView() {
+        }
+
+        public TestMenuView(MenuEventManager menuEventManager) {
+            super(menuEventManager);
+        }
+
+        @Override
+        protected Class<? extends Menu> getType() {
+            return TestMenu.class;
+        }
+
+        @Override
+        public String title() {
+            return "테스트 화면";
+        }
+    }
+
+    @BeforeEach
+    public void setup() {
+        mockConsole = Mockito.mockStatic(Console.class);
+    }
+
+    @Test
+    public void constructor__NotReceivedEventManagerException() {
+        String message = "이벤트 관리자를 전달받지 못하였습니다.";
+        assertThatThrownBy(() -> new MenuView(null) {
+            @Override
+            public String title() {
+                return "";
+            }
+
+            @Override
+            protected Class<? extends Menu> getType() {
+                return null;
+            }
+        }).isInstanceOf(IllegalArgumentException.class).hasMessage(message);
+    }
+
+    @Test
+    public void show() {
+        TestMenu item = TestMenu.ITEM;
+        TestMenuView testMenuView = new TestMenuView();
+        testMenuView.show();
+        this.mockConsole.verify(() -> {
+            Console.printHeader(testMenuView.title());
+            Console.println(String.format("%s. %s", item.command, item.name));
+            Console.println();
+        });
+    }
+
+    @Test
+    public void question() {
+        TestMenu item = TestMenu.ITEM;
+        TestMenuView testMenuView = new TestMenuView();
+        this.mockConsole.when(Console::readline).thenReturn(item.command);
+        assertThat(testMenuView.question()).isEqualTo(item);
+    }
+
+    @Test
+    public void question_CanNotSelectedFunctionException() {
+        TestMenu item = TestMenu.ITEM;
+        TestMenuView testMenuView = new TestMenuView();
+        String message = "선택할 수 없는 기능입니다.";
+        this.mockConsole.when(Console::readline).thenReturn("none");
+        this.mockConsole.when(Console::readline).thenReturn(item.command);
+        testMenuView.question();
+        this.mockConsole.verify(() -> {
+            Console.println();
+            Console.printError(message);
+            Console.println();
+
+            Console.println();
+        });
+    }
+
+    @Test
+    public void onEvent() {
+        TestMenu item = TestMenu.ITEM;
+        AtomicInteger count = new AtomicInteger(0);
+        TestMenuView testMenuView = new TestMenuView(
+            MenuEventManager.builder().addEventListener(item, count::getAndIncrement));
+        testMenuView.onEvent(item);
+        assertThat(count.get()).isEqualTo(1);
+    }
+
+    @Test
+    public void onEvent__CanNotProcessEventHandlerException() {
+        TestMenu item = TestMenu.ITEM;
+        TestMenuView testMenuView = new TestMenuView();
+        String message = "이벤트를 처리할 수 없습니다.";
+        assertThatThrownBy(() -> testMenuView.onEvent(null)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+        assertThatThrownBy(() -> testMenuView.onEvent(item)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+
+    @AfterEach
+    public void init() {
+        mockConsole.close();
+    }
+}
+```
+
+```java
+// MenuView.java
+
+package subway.screen.view;
+
+import java.util.List;
+
+import subway.screen.ui.Console;
+
+public abstract class MenuView implements View {
+    private static final String NOT_RECEIVED_EVENT_MANAGER_MESSAGE = "이벤트 관리자를 전달받지 못하였습니다.";
+    private static final String MENU_OUTPUT_FORMAT = "%s. %s";
+    private static final String CAN_NOT_SELECTED_FUNCTION_MESSAGE = "선택할 수 없는 기능입니다.";
+    private static final String CAN_NOT_PROCESS_EVENT_HANDLER_MESSAGE = "이벤트를 처리할 수 없습니다.";
+
+    private final MenuEventManager menuEventManager;
+
+    protected MenuView() {
+        this(MenuEventManager.builder());
+    }
+
+    protected MenuView(MenuEventManager menuEventManager) {
+        if (menuEventManager == null) {
+            throw new IllegalArgumentException(NOT_RECEIVED_EVENT_MANAGER_MESSAGE);
+        }
+        this.menuEventManager = menuEventManager;
+    }
+
+    protected abstract Class<? extends Menu> getType();
+
+    @Override
+    public void show() {
+        Console.printHeader(this.title());
+        List<Menu> menuList = Menu.findAll(this.getType());
+        for (Menu menu : menuList) {
+            Console.println(String.format(MENU_OUTPUT_FORMAT, menu.getCommand(), menu.getName()));
+        }
+        Console.println();
+    }
+
+    public Menu question() {
+        do {
+            Console.printHeader("원하는 기능을 선택하세요.");
+            String command = Console.readline();
+            try {
+                Menu menu = Menu.findByCommand(this.getType(), command)
+                    .orElseThrow(() -> new IllegalArgumentException(CAN_NOT_SELECTED_FUNCTION_MESSAGE));
+                Console.println();
+                return menu;
+            } catch (IllegalArgumentException e) {
+                Console.println();
+                Console.printError(e.getMessage());
+                Console.println();
+            }
+        } while (true);
+    }
+
+    public void onEvent(Menu menu) {
+        Runnable handler = this.menuEventManager.select(menu)
+            .orElseThrow(() -> new IllegalArgumentException(CAN_NOT_PROCESS_EVENT_HANDLER_MESSAGE));
+        handler.run();
+    }
+}
+```
+
+메뉴 화면 공통 기능 구현.
