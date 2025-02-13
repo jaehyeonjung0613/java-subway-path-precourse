@@ -3096,3 +3096,127 @@ public class PathMenuView extends MenuView {
 ```
 
 이벤트 처리 매핑.
+
+## 10. 메인 화면 구현
+
+```java
+// MainMenu.java
+
+package subway.screen.view.main;
+
+import subway.screen.view.Menu;
+
+public enum MainMenu implements Menu {
+    PATH_SEARCH("1", "경로 조회"), END("Q", "종료");
+
+    private final String command;
+    private final String name;
+
+    MainMenu(String command, String name) {
+        this.command = command;
+        this.name = name;
+    }
+
+    @Override
+    public String getCommand() {
+        return this.command;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
+}
+```
+
+```java
+// MainMenuView.java
+
+package subway.screen.view.main;
+
+import subway.screen.view.Menu;
+import subway.screen.view.MenuView;
+
+public class MainMenuView extends MenuView {
+    public MainMenuView() {
+        super();
+    }
+
+    @Override
+    public String title() {
+        return "메인 화면";
+    }
+
+    @Override
+    protected Class<? extends Menu> getType() {
+        return MainMenu.class;
+    }
+}
+```
+
+메인 화면 구성.
+
+```java
+// MainViewController.java
+
+package subway.presentation;
+
+import subway.screen.ui.Console;
+import subway.screen.view.Menu;
+import subway.screen.view.main.MainMenuView;
+
+public class MainViewController implements ViewController {
+    private final MainMenuView mainMenuView = new MainMenuView(this);
+
+    private boolean end;
+
+    @Override
+    public void execute() {
+        this.end = false;
+        do {
+            mainMenuView.show();
+            Menu menu = mainMenuView.question();
+            try {
+                mainMenuView.onEvent(menu);
+            } catch (IllegalArgumentException e) {
+                Console.printError(e.getMessage());
+                Console.println();
+            }
+        } while (!this.end);
+    }
+
+    public void handlePathSearch() {
+        PathViewController pathViewController = new PathViewController();
+        pathViewController.execute();
+    }
+
+    public void handleEnd() {
+        this.end = true;
+    }
+}
+```
+
+메인 화면 제어 구현.
+
+메뉴 선택 이벤트 처리 구현.
+
+```java
+// MainMenuView.java
+
+package subway.screen.view.main;
+
+import subway.presentation.MainViewController;
+import subway.screen.view.Menu;
+import subway.screen.view.MenuEventManager;
+import subway.screen.view.MenuView;
+
+public class MainMenuView extends MenuView {
+    public MainMenuView(MainViewController mainViewController) {
+        super(MenuEventManager.builder()
+            .addEventListener(MainMenu.PATH_SEARCH, mainViewController::handlePathSearch)
+            .addEventListener(MainMenu.END, mainViewController::handleEnd));
+    }
+}
+```
+
+이벤트 처리 매핑.
