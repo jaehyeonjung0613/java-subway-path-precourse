@@ -3542,3 +3542,244 @@ public class XmlFileParser extends FileParser {
 ```
 
 Xml Parser 기능 구현.
+
+## 13. 초기 데이터 정의
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <line>
+        <name>2호선</name>
+    </line>
+    <line>
+        <name>3호선</name>
+    </line>
+    <line>
+        <name>신분당선</name>
+    </line>
+</root>
+```
+
+Line(노선) 데이터 정의.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <station>
+        <name>교대역</name>
+    </station>
+    <station>
+        <name>강남역</name>
+    </station>
+    <station>
+        <name>역삼역</name>
+    </station>
+    <station>
+        <name>남부터미널역</name>
+    </station>
+    <station>
+        <name>양재역</name>
+    </station>
+    <station>
+        <name>양재시민의숲역</name>
+    </station>
+    <station>
+        <name>매봉역</name>
+    </station>
+</root>
+```
+
+Station(역) 데이터 정의.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <!-- 2호선 -->
+    <section>
+        <line>
+            <name>2호선</name>
+        </line>
+        <source>
+            <name>교대역</name>
+        </source>
+        <sink>
+            <name>강남역</name>
+        </sink>
+        <distance>2</distance>
+        <time>3</time>
+    </section>
+    <section>
+        <line>
+            <name>2호선</name>
+        </line>
+        <source>
+            <name>강남역</name>
+        </source>
+        <sink>
+            <name>교대역</name>
+        </sink>
+        <distance>2</distance>
+        <time>3</time>
+    </section>
+    <section>
+        <line>
+            <name>2호선</name>
+        </line>
+        <source>
+            <name>강남역</name>
+        </source>
+        <sink>
+            <name>역삼역</name>
+        </sink>
+        <distance>2</distance>
+        <time>3</time>
+    </section>
+    <section>
+        <line>
+            <name>2호선</name>
+        </line>
+        <source>
+            <name>역삼역</name>
+        </source>
+        <sink>
+            <name>강남역</name>
+        </sink>
+        <distance>2</distance>
+        <time>3</time>
+    </section>
+    <!-- 3호선 -->
+    <section>
+        <line>
+            <name>3호선</name>
+        </line>
+        <source>
+            <name>교대역</name>
+        </source>
+        <sink>
+            <name>남부터미널역</name>
+        </sink>
+        <distance>3</distance>
+        <time>2</time>
+    </section>
+    <section>
+        <line>
+            <name>3호선</name>
+        </line>
+        <source>
+            <name>남부터미널역</name>
+        </source>
+        <sink>
+            <name>교대역</name>
+        </sink>
+        <distance>3</distance>
+        <time>2</time>
+    </section>
+    <section>
+        <line>
+            <name>3호선</name>
+        </line>
+        <source>
+            <name>남부터미널역</name>
+        </source>
+        <sink>
+            <name>양재역</name>
+        </sink>
+        <distance>6</distance>
+        <time>5</time>
+    </section>
+    <section>
+        <line>
+            <name>3호선</name>
+        </line>
+        <source>
+            <name>양재역</name>
+        </source>
+        <sink>
+            <name>남부터미널역</name>
+        </sink>
+        <distance>6</distance>
+        <time>5</time>
+    </section>
+    <section>
+        <line>
+            <name>3호선</name>
+        </line>
+        <source>
+            <name>양재역</name>
+        </source>
+        <sink>
+            <name>매봉역</name>
+        </sink>
+        <distance>1</distance>
+        <time>1</time>
+    </section>
+    <section>
+        <line>
+            <name>3호선</name>
+        </line>
+        <source>
+            <name>매봉역</name>
+        </source>
+        <sink>
+            <name>양재역</name>
+        </sink>
+        <distance>1</distance>
+        <time>1</time>
+    </section>
+    <!-- 신분당선 -->
+    <section>
+        <line>
+            <name>신분당선</name>
+        </line>
+        <source>
+            <name>강남역</name>
+        </source>
+        <sink>
+            <name>양재역</name>
+        </sink>
+        <distance>2</distance>
+        <time>8</time>
+    </section>
+    <section>
+        <line>
+            <name>신분당선</name>
+        </line>
+        <source>
+            <name>양재역</name>
+        </source>
+        <sink>
+            <name>강남역</name>
+        </sink>
+        <distance>2</distance>
+        <time>8</time>
+    </section>
+    <section>
+        <line>
+            <name>신분당선</name>
+        </line>
+        <source>
+            <name>양재역</name>
+        </source>
+        <sink>
+            <name>양재시민의숲역</name>
+        </sink>
+        <distance>10</distance>
+        <time>3</time>
+    </section>
+    <section>
+        <line>
+            <name>신분당선</name>
+        </line>
+        <source>
+            <name>양재시민의숲역</name>
+        </source>
+        <sink>
+            <name>양재역</name>
+        </sink>
+        <distance>10</distance>
+        <time>3</time>
+    </section>
+</root>
+```
+
+Section(구간) 데이터 정의.
