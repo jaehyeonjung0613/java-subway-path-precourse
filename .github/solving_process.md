@@ -3852,3 +3852,22 @@ public class IntroViewController implements ViewController {
 ```
 
 인트로 화면 제어 구현.
+
+## 15. 애플리케이션 구현
+
+```java
+// Application.java
+
+package subway;
+
+import subway.presentation.IntroViewController;
+
+public class Application {
+    public static void main(String[] args) {
+        IntroViewController introViewController = new IntroViewController();
+        introViewController.execute();
+    }
+}
+```
+
+애플리케이션 실행 시 인트로 화면 호출 구현.
