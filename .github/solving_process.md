@@ -3220,3 +3220,139 @@ public class MainMenuView extends MenuView {
 ```
 
 이벤트 처리 매핑.
+
+## 11. 파일 검증
+
+```java
+// FileParserTest.java
+
+package subway.infrastructure;
+
+import static org.assertj.core.api.Assertions.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+public class FileParserTest {
+    private File file;
+    private File directory;
+
+    @BeforeEach
+    public void setup() {
+        this.directory = new File("./dummy");
+        this.file = new File("./dummy.txt");
+        try {
+            this.directory.mkdir();
+            this.file.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static class TestFileParser extends FileParser {
+        public TestFileParser(File file) {
+            super(file);
+        }
+
+        @Override
+        public boolean allowExtension(String extension) {
+            return "java".equals(extension);
+        }
+
+        @Override
+        public List<Map<String, Object>> parser() {
+            return null;
+        }
+    }
+
+    @Test
+    public void constructor__NotExistsFileException() {
+        File none = new File("./none.txt");
+        String message = "파일이 존재하지 않습니다.";
+        assertThatThrownBy(() -> new TestFileParser(null)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+        assertThatThrownBy(() -> new TestFileParser(none)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+
+    @Test
+    public void constructor__NotReceivedFileTypeException() {
+        String message = "파일 유형이 아닙니다.";
+        assertThatThrownBy(() -> new TestFileParser(this.directory)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+
+    @Test
+    public void constructor__NotAllowedFileExtensionException() {
+        String message = "허용된 파일 확장자가 아닙니다.";
+        assertThatThrownBy(() -> new TestFileParser(this.file)).isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(message);
+    }
+
+    @AfterEach
+    public void init() {
+        this.file.delete();
+        this.directory.delete();
+    }
+}
+```
+
+```java
+// FileParser.java
+
+package subway.infrastructure;
+
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+public abstract class FileParser {
+    private static final String NOT_EXISTS_FILE_MESSAGE = "파일이 존재하지 않습니다.";
+    private static final String NOT_FILE_TYPE_MESSAGE = "파일 유형이 아닙니다.";
+    private static final String NOT_ALLOWED_FILE_EXTENSION_MESSAGE = "허용된 파일 확장자가 아닙니다.";
+
+    protected final File file;
+
+    public FileParser(String fileName) {
+        this(new File(Objects.requireNonNull(FileParser.class.getClassLoader().getResource(fileName)).getPath()));
+    }
+
+    public FileParser(File file) {
+        this.validate(file);
+        this.file = file;
+    }
+
+    private void validate(File file) {
+        if (file == null || !file.exists()) {
+            throw new IllegalArgumentException(NOT_EXISTS_FILE_MESSAGE);
+        }
+        if (!file.isFile()) {
+            throw new IllegalArgumentException(NOT_FILE_TYPE_MESSAGE);
+        }
+        if (!this.allowExtension(this.extractExtension(file.getName()))) {
+            throw new IllegalArgumentException(NOT_ALLOWED_FILE_EXTENSION_MESSAGE);
+        }
+    }
+
+    private String extractExtension(String fileName) {
+        int index = fileName.lastIndexOf(".");
+        if (index > 0) {
+            return fileName.substring(index + 1);
+        }
+        return "";
+    }
+
+    public abstract boolean allowExtension(String extension);
+
+    public abstract List<Map<String, Object>> parser();
+}
+```
+
+파일 검증 공통 기능 구현.
